@@ -43,6 +43,7 @@ export const TRANSLATIONS = {
     reg_no_federat: "No estic federat/da",
     err_federat_required:
       "Posa el teu número de federat, o marca \"No estic federat/da\".",
+    federation_pending_tag: "Sol·licitud de federació enviada",
     ranking_title: "Rànquing General",
     calc_btn: "Calculadora",
     calc_close: "Tancar",
@@ -360,6 +361,7 @@ export const TRANSLATIONS = {
     reg_no_federat: "No estoy federado/a",
     err_federat_required:
       'Pon tu número de federado, o marca "No estoy federado/a".',
+    federation_pending_tag: "Solicitud de federación enviada",
     ranking_title: "Ranking General",
     calc_btn: "Calculadora",
     calc_close: "Cerrar",
@@ -677,6 +679,7 @@ export const TRANSLATIONS = {
     reg_no_federat: "I'm not federated",
     err_federat_required:
       "Enter your federation number, or check \"I'm not federated\".",
+    federation_pending_tag: "Federation request sent",
     ranking_title: "Overall Ranking",
     calc_btn: "Calculator",
     calc_close: "Close",

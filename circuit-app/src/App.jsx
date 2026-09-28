@@ -1193,6 +1193,9 @@ function PerfilTab({ player, players, onLogout, onUpdate }) {
         )}
         <p className="division-badge">{div.icon} {t(`division_${div.key}`)}</p>
         <p className="elo-line">{Math.round(player.elo || ELO_START)} ELO · {t("peak_elo")}: {Math.round(peakEloFor(player))}</p>
+        {player.federationRequestStatus === "pending" && !player.federat && (
+          <p className="tag pending-federation">{t("federation_pending_tag")}</p>
+        )}
       </div>
 
       <div className="stats-row">
@@ -1416,6 +1419,9 @@ function AdminPanel({ admin, players, jornadas, onExit }) {
 
 function PlayerManageRow({ player }) {
   const { t } = useLang();
+  const [editingFed, setEditingFed] = useState(false);
+  const [fedNum, setFedNum] = useState(player.federatNumber || "");
+
   const toggle = async () => {
     const action = player.active === false ? t("pm_confirm_reactivate") : t("pm_confirm_deactivate");
     if (!window.confirm(t("pm_confirm_q", { action, name: player.name, email: player.familyEmail }))) return;
@@ -1425,11 +1431,38 @@ function PlayerManageRow({ player }) {
       alert(t("pm_error"));
     }
   };
+
+  const saveFederation = async () => {
+    await updateDoc(doc(db, "players", player.id), {
+      federatNumber: fedNum.trim() || null,
+      federat: !!fedNum.trim(),
+      federationRequestStatus: fedNum.trim() ? "confirmed" : player.federationRequestStatus || null,
+    });
+    setEditingFed(false);
+  };
+
   return (
     <li>
       {player.name}
       {player.active === false && <span className="tag">{t("pm_off_tag")}</span>}
+      {player.federationRequestStatus === "pending" && !player.federat && (
+        <span className="tag pending-federation">{t("federation_pending_tag")}</span>
+      )}
       <button onClick={toggle}>{player.active === false ? t("pm_reactivate") : t("pm_deactivate")}</button>
+      {editingFed ? (
+        <span className="fed-editor">
+          <input
+            value={fedNum}
+            placeholder={t("reg_federat_ph")}
+            onChange={(e) => setFedNum(e.target.value)}
+          />
+          <button onClick={saveFederation}>{t("save")}</button>
+        </span>
+      ) : (
+        <button className="secondary small" onClick={() => setEditingFed(true)}>
+          {player.federat ? `#${player.federatNumber}` : t("reg_federat_label")}
+        </button>
+      )}
     </li>
   );
 }
