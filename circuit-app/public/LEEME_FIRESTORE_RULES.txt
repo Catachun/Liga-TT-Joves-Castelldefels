@@ -1,0 +1,66 @@
+PASO IMPORTANTE ANTES DE PROBAR LA APP
+========================================
+
+PASO 1 — Activar Firebase Storage (para guardar las selfies)
+------------------------------------------------
+Firebase Console → tu proyecto → menú izquierdo → "Storage"
+→ Clic en "Comenzar" / "Get started"
+→ Elige modo "Producción" (igual que hiciste con Firestore)
+→ Ubicación: la misma región que Firestore (eur3 / europe-west)
+→ Habilitar
+
+Luego ve a Storage → pestaña "Rules" → sustituye por esto y publica:
+
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /selfies/{fileName} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}
+
+PASO 2 — Reglas de Firestore
+------------------------------------------------
+Ve a: Firebase Console → tu proyecto → Firestore Database → pestaña "Reglas"
+
+Sustituye el contenido por esto y dale a "Publicar":
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /players/{playerId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /jornadas/{jornadaId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /seasons/{seasonId} {
+      allow read: if true;
+      allow write: if true;
+    }
+    match /meta/{docId} {
+      allow read: if true;
+      allow write: if true;
+    }
+  }
+}
+
+NOTA DE SEGURIDAD:
+Acceso simple con nombre + email (sin login real). Cualquiera con conocimientos
+técnicos podría escribir directamente en la base de datos o subir archivos al
+Storage sin pasar por la app. Riesgo bajo para un circuito de club, pero queda
+anotado por si en el futuro quieres cerrarlo con un login real.
+
+MODO GESTIÓN (admin):
+Dentro de la app, en Perfil → "Accés gestió (organització)" → PIN: 2580
+
+SELFIE OBLIGATORIA:
+Al registrarse por primera vez, el jugador debe hacerse un selfie (se le pide
+la cámara frontal directamente en el móvil) antes de poder entrar. Si vuelve
+a entrar más adelante, puede actualizar su foto pero no es obligatorio.
+Las fotos se guardan en Firebase Storage, redimensionadas a 480x480 para no
+ocupar mucho espacio.
