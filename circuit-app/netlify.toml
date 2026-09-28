@@ -1,6 +1,12 @@
 [build]
   publish = "public"
   functions = "netlify/functions"
+  # La clau d'API de Firebase al client (src/firebase.js / bundle.js) és pública
+  # per disseny (no és un secret real: la seguretat la donen les Firestore
+  # Security Rules, no aquesta clau), així que s'exclou de l'escàner.
+  # El README de la funció ja no conté cap valor real de secret.
+  [build.environment]
+    SECRETS_SCAN_OMIT_PATHS = "public/bundle.js,src/firebase.js"
 
 [functions]
   node_bundler = "esbuild"

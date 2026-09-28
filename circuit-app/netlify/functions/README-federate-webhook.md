@@ -19,7 +19,7 @@ Site settings → Environment variables → afegeix:
 | Clau | Valor |
 |---|---|
 | `FIREBASE_SERVICE_ACCOUNT` | tot el contingut del `.json` del pas 1, enganxat tal qual (una sola línia és més segur) |
-| `JOTFORM_WEBHOOK_SECRET` | `EEMmSTD9bMO7rxmnfYuLswDY_Avikxyg` (ja generat; el pots canviar si vols) |
+| `JOTFORM_WEBHOOK_SECRET` | el secret generat per a aquesta integració (marca'l com "Contains secret values" a Netlify) |
 
 ## 3. Connectar Netlify amb el repositori de GitHub (necessari per a les Functions)
 
@@ -40,8 +40,8 @@ gestió de jugadors).
 ## 4. Configurar el webhook a Jotform
 
 1. Obre el formulari → **Settings → Integrations → Webhooks**.
-2. Afegeix aquesta URL (canvia `TU-SITE` pel domini real un cop desplegat):
-   `https://circuittt.netlify.app/.netlify/functions/federate-webhook?secret=EEMmSTD9bMO7rxmnfYuLswDY_Avikxyg`
+2. Afegeix aquesta URL, substituint `EL_SECRET` pel valor real de `JOTFORM_WEBHOOK_SECRET` (el trobaràs a Netlify → Environment variables):
+   `https://circuittt.netlify.app/.netlify/functions/federate-webhook?secret=EL_SECRET`
 3. Desa.
 
 A partir d'aquí, cada sol·licitud federativa marcarà automàticament el
