@@ -20,6 +20,11 @@ export const VENUES = {
 
 export const JORNADA_PRICE = 7;
 
+// One-off AFI federation license, valid for the whole season, separate from
+// the per-jornada JORNADA_PRICE above.
+export const AFI_LICENSE_PRICE = 19;
+export const JOTFORM_FEDERATION_URL = "https://form.jotform.com/262702301168045";
+
 // Given a PIN, returns { type: 'master' } | { type: 'referee' } | { type: 'venue', venueKey } | null
 export function resolvePin(pin) {
   if (pin === MASTER_PIN) return { type: "master" };

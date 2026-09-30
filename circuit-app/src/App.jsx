@@ -20,7 +20,7 @@ import {
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./firebase";
 import { useLang, LangProvider } from "./i18n";
-import { MASTER_PIN, MAX_PARTICIPANTS, MAX_WAITLIST, VENUES, JORNADA_PRICE, resolvePin, scheduleForDate } from "./config";
+import { MASTER_PIN, MAX_PARTICIPANTS, MAX_WAITLIST, VENUES, JORNADA_PRICE, AFI_LICENSE_PRICE, JOTFORM_FEDERATION_URL, resolvePin, scheduleForDate } from "./config";
 import {
   ELO_START,
   uid,
@@ -362,6 +362,21 @@ function LoginScreen({ onLogin }) {
               />
               {t("reg_no_federat")}
             </label>
+            {noFederat && (
+              <div className="notify-banner">
+                <p className="hint small">
+                  {t("reg_federat_notice", { price: AFI_LICENSE_PRICE, jornadaPrice: JORNADA_PRICE })}
+                </p>
+                <a
+                  className="smallbtn"
+                  href={JOTFORM_FEDERATION_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {t("reg_federat_jotform_btn")}
+                </a>
+              </div>
+            )}
           </div>
 
           <label className="checkbox-line">

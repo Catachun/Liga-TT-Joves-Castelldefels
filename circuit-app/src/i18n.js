@@ -41,6 +41,9 @@ export const TRANSLATIONS = {
     reg_federat_label: "Número de llicència federativa (FCTT/RFETM)",
     reg_federat_ph: "Ex: 12345",
     reg_no_federat: "No estic federat/da",
+    reg_federat_notice:
+      "Per jugar el torneig cal treure't la llicència AFI: costa {price} € (es cobra només la primera vegada i serveix per a tota la temporada), a més dels {jornadaPrice} € de cada jornada. Fes la sol·licitud aquí:",
+    reg_federat_jotform_btn: "Sol·licitar la federació (AFI)",
     err_federat_required:
       "Posa el teu número de federat, o marca \"No estic federat/da\".",
     federation_pending_tag: "Sol·licitud de federació enviada",
@@ -359,6 +362,9 @@ export const TRANSLATIONS = {
     reg_federat_label: "Número de licencia federativa (FCTT/RFETM)",
     reg_federat_ph: "Ej: 12345",
     reg_no_federat: "No estoy federado/a",
+    reg_federat_notice:
+      "Para jugar el torneo hace falta sacarte la licencia AFI: cuesta {price} € (se cobra solo la primera vez y sirve para toda la temporada), aparte de los {jornadaPrice} € de cada jornada. Haz la solicitud aquí:",
+    reg_federat_jotform_btn: "Solicitar la federación (AFI)",
     err_federat_required:
       'Pon tu número de federado, o marca "No estoy federado/a".',
     federation_pending_tag: "Solicitud de federación enviada",
@@ -677,6 +683,9 @@ export const TRANSLATIONS = {
     reg_federat_label: "Federation license number (FCTT/RFETM)",
     reg_federat_ph: "E.g. 12345",
     reg_no_federat: "I'm not federated",
+    reg_federat_notice:
+      "To play in the tournament you need an AFI federation license: it costs €{price} (charged only once, valid for the whole season), on top of the €{jornadaPrice} per session. Apply here:",
+    reg_federat_jotform_btn: "Apply for federation (AFI)",
     err_federat_required:
       "Enter your federation number, or check \"I'm not federated\".",
     federation_pending_tag: "Federation request sent",
