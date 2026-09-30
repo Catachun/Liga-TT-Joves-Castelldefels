@@ -46,6 +46,17 @@ import {
   computeSeasonReset,
 } from "./elo";
 
+// Badge keys in elo.js (first_win, six_hundred, clean_sweep, elite700) don't
+// all match their i18n slug (badge_firstwin_*, badge_600_*, badge_cleansweep_*,
+// badge_700_*) — this maps the internal key to the right translation suffix.
+const BADGE_I18N_KEY = {
+  first_win: "firstwin",
+  six_hundred: "600",
+  clean_sweep: "cleansweep",
+  elite700: "700",
+};
+const badgeI18nKey = (key) => BADGE_I18N_KEY[key] || key;
+
 // ---------------------------------------------------------------------------
 // Local storage hooks
 // ---------------------------------------------------------------------------
@@ -1215,10 +1226,11 @@ function PerfilTab({ player, players, onLogout, onUpdate }) {
         <div className="badges-grid">
           {Object.keys(BADGE_ICONS).map((key) => {
             const earned = badges.includes(key);
+            const i18nKey = badgeI18nKey(key);
             return (
-              <div key={key} className={`badge ${earned ? "earned" : "locked"}`} title={t(`badge_${key}_desc`)}>
+              <div key={key} className={`badge ${earned ? "earned" : "locked"}`} title={t(`badge_${i18nKey}_desc`)}>
                 <span className="badge-icon">{BADGE_ICONS[key]}</span>
-                <span className="badge-name">{t(`badge_${key}_name`)}</span>
+                <span className="badge-name">{t(`badge_${i18nKey}_name`)}</span>
               </div>
             );
           })}
@@ -1278,6 +1290,26 @@ function NormesTab() {
       <section>
         <h3>{t("normes_trophies_title")}</h3>
         <p>{t("normes_trophies_desc", { first: SEASON_AWARD_BONUS.first, second: SEASON_AWARD_BONUS.second, third: SEASON_AWARD_BONUS.third })}</p>
+      </section>
+      <section className="badges-ref-card">
+        <h3>{t("badges_ref_title")}</h3>
+        <p>{t("badges_ref_desc")}</p>
+        <ul className="badges-ref-list">
+          {Object.keys(BADGE_ICONS).map((key) => {
+            const i18nKey = badgeI18nKey(key);
+            return (
+              <li key={key}>
+                <span className="badges-ref-icon">{BADGE_ICONS[key]}</span>
+                <span className="badges-ref-text">
+                  <span className="badges-ref-name">{t(`badge_${i18nKey}_name`)}</span>
+                  <br />
+                  {t(`badge_${i18nKey}_desc`)}
+                </span>
+                <span className="badges-ref-points">+{BADGE_POINTS[key]}</span>
+              </li>
+            );
+          })}
+        </ul>
       </section>
       <section>
         <h3>{t("normes_location_title")}</h3>
