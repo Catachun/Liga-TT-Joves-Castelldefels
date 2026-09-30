@@ -326,7 +326,7 @@ function LoginScreen({ onLogin }) {
           <div className="family-list">
             {familyMembers.map((m) => (
               <button key={m.id} className="family-member" onClick={() => onLogin(m)}>
-                {m.selfieUrl && <img src={m.selfieUrl} alt={m.name} />}
+                {(m.selfieUrl || m.photoURL) && <img src={m.selfieUrl || m.photoURL} alt={m.name} />}
                 <span>{m.name}</span>
               </button>
             ))}
@@ -422,8 +422,8 @@ function RankingTab({ players }) {
 
   const filtered = active.filter((p) => {
     if (filterClub && p.club !== filterClub) return false;
-    if (filterHand && p.hand !== filterHand) return false;
-    if (filterStyle && p.style !== filterStyle) return false;
+    if (filterHand && (p.hand || p.ma) !== filterHand) return false;
+    if (filterStyle && (p.style || p.estil) !== filterStyle) return false;
     return true;
   });
 
@@ -475,7 +475,7 @@ function RankingTab({ players }) {
             return (
               <li key={p.id} className="ranking-row">
                 <span className="pos">{i + 1}</span>
-                {p.selfieUrl && <img src={p.selfieUrl} alt={p.name} className="avatar" />}
+                {(p.selfieUrl || p.photoURL) && <img src={p.selfieUrl || p.photoURL} alt={p.name} className="avatar" />}
                 <span className="name">{p.name}</span>
                 <span className="division">{div.icon}</span>
                 <span className="elo">{Math.round(p.elo || ELO_START)}</span>
@@ -1144,8 +1144,8 @@ function PerfilTab({ player, players, onLogout, onUpdate }) {
   const [editingName, setEditingName] = useState(false);
   const [name, setName] = useState(player.name);
   const [club, setClub] = useState(player.club || "");
-  const [hand, setHand] = useState(player.hand || "dreta");
-  const [style, setStyle] = useState(player.style || "allround");
+  const [hand, setHand] = useState(player.hand || player.ma || "dreta");
+  const [style, setStyle] = useState(player.style || player.estil || "allround");
 
   const div = divisionFor(player.elo || ELO_START);
   const badges = player.earnedBadges || [];
@@ -1173,7 +1173,9 @@ function PerfilTab({ player, players, onLogout, onUpdate }) {
   return (
     <div className="perfil-tab">
       <div className="perfil-header">
-        {player.selfieUrl && <img src={player.selfieUrl} alt={player.name} className="perfil-avatar" />}
+        {(player.selfieUrl || player.photoURL) && (
+          <img src={player.selfieUrl || player.photoURL} alt={player.name} className="perfil-avatar" />
+        )}
         {editingName ? (
           <span>
             <input value={name} onChange={(e) => setName(e.target.value)} />
