@@ -149,71 +149,15 @@ function useJornadas() {
 // Selfie capture
 // ---------------------------------------------------------------------------
 function SelfieCapture({ value, onChange }) {
-  const videoRef = useRef(null);
-  const streamRef = useRef(null);
-  const [streaming, setStreaming] = useState(false);
   const fileInputRef = useRef(null);
 
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" },
-      });
-      streamRef.current = stream;
-      setStreaming(true);
-    } catch {
-      fileInputRef.current?.click();
-    }
-  };
-
-  // The <video> element only mounts once `streaming` is true. Attaching the
-  // stream here (after React has committed the DOM) guarantees the ref is
-  // set, unlike doing it inline in startCamera where the element doesn't
-  // exist yet. play() is called explicitly too: iOS Safari won't reliably
-  // autoplay a stream attached outside a synchronous user-gesture call
-  // stack (startCamera is async, so the await above already breaks that
-  // chain), even with the autoPlay/playsInline/muted attributes set.
-  useEffect(() => {
-    const video = videoRef.current;
-    const stream = streamRef.current;
-    if (!streaming || !video || !stream) return;
-    video.srcObject = stream;
-    video.muted = true;
-    const playPromise = video.play();
-    if (playPromise?.catch) playPromise.catch(() => {});
-  }, [streaming]);
-
-  useEffect(
-    () => () => {
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-    },
-    []
-  );
-
-  const capture = () => {
-    const video = videoRef.current;
-    const canvas = document.createElement("canvas");
-    canvas.width = 480;
-    canvas.height = 480;
-    const ctx = canvas.getContext("2d");
-    const size = Math.min(video.videoWidth, video.videoHeight);
-    ctx.drawImage(
-      video,
-      (video.videoWidth - size) / 2,
-      (video.videoHeight - size) / 2,
-      size,
-      size,
-      0,
-      0,
-      480,
-      480
-    );
-    const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-    onChange(dataUrl);
-    const stream = video.srcObject;
-    stream?.getTracks().forEach((t) => t.stop());
-    streamRef.current = null;
-    setStreaming(false);
+  // We used to build a live in-app camera preview with getUserMedia, but
+  // that path is unreliable on iOS Safari (autoplay/ref-timing quirks mean
+  // the preview can end up blank with the camera indicator on and no way
+  // out). The native camera picker via a file input with capture="user" is
+  // far more robust across iOS and Android, so we go straight to that.
+  const openCamera = () => {
+    fileInputRef.current?.click();
   };
 
   const onFile = (e) => {
@@ -227,14 +171,9 @@ function SelfieCapture({ value, onChange }) {
   return (
     <div className="selfie-capture">
       {value ? (
-        <img src={value} alt="selfie" className="selfie-preview" onClick={startCamera} />
-      ) : streaming ? (
-        <div className="selfie-live">
-          <video ref={videoRef} autoPlay playsInline muted />
-          <button type="button" onClick={capture}>📸</button>
-        </div>
+        <img src={value} alt="selfie" className="selfie-preview" onClick={openCamera} />
       ) : (
-        <button type="button" className="selfie-btn" onClick={startCamera}>
+        <button type="button" className="selfie-btn" onClick={openCamera}>
           🤳
         </button>
       )}
