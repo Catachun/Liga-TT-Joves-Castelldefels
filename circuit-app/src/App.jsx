@@ -158,8 +158,18 @@ function SelfieCapture({ value, onChange }) {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user" },
       });
-      videoRef.current.srcObject = stream;
       setStreaming(true);
+      // The <video> element only mounts once `streaming` is true, so wait a
+      // tick for the ref to attach before wiring up the stream. Also call
+      // play() explicitly: iOS Safari won't reliably autoplay a stream that
+      // was attached outside a synchronous user-gesture call stack (this is
+      // an async function, so the await above already broke that chain).
+      requestAnimationFrame(() => {
+        const video = videoRef.current;
+        if (!video) return;
+        video.srcObject = stream;
+        video.play().catch(() => {});
+      });
     } catch {
       fileInputRef.current?.click();
     }
