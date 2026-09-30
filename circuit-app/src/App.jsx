@@ -150,6 +150,7 @@ function useJornadas() {
 // ---------------------------------------------------------------------------
 function SelfieCapture({ value, onChange }) {
   const videoRef = useRef(null);
+  const streamRef = useRef(null);
   const [streaming, setStreaming] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -158,22 +159,36 @@ function SelfieCapture({ value, onChange }) {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user" },
       });
+      streamRef.current = stream;
       setStreaming(true);
-      // The <video> element only mounts once `streaming` is true, so wait a
-      // tick for the ref to attach before wiring up the stream. Also call
-      // play() explicitly: iOS Safari won't reliably autoplay a stream that
-      // was attached outside a synchronous user-gesture call stack (this is
-      // an async function, so the await above already broke that chain).
-      requestAnimationFrame(() => {
-        const video = videoRef.current;
-        if (!video) return;
-        video.srcObject = stream;
-        video.play().catch(() => {});
-      });
     } catch {
       fileInputRef.current?.click();
     }
   };
+
+  // The <video> element only mounts once `streaming` is true. Attaching the
+  // stream here (after React has committed the DOM) guarantees the ref is
+  // set, unlike doing it inline in startCamera where the element doesn't
+  // exist yet. play() is called explicitly too: iOS Safari won't reliably
+  // autoplay a stream attached outside a synchronous user-gesture call
+  // stack (startCamera is async, so the await above already breaks that
+  // chain), even with the autoPlay/playsInline/muted attributes set.
+  useEffect(() => {
+    const video = videoRef.current;
+    const stream = streamRef.current;
+    if (!streaming || !video || !stream) return;
+    video.srcObject = stream;
+    video.muted = true;
+    const playPromise = video.play();
+    if (playPromise?.catch) playPromise.catch(() => {});
+  }, [streaming]);
+
+  useEffect(
+    () => () => {
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+    },
+    []
+  );
 
   const capture = () => {
     const video = videoRef.current;
@@ -197,6 +212,7 @@ function SelfieCapture({ value, onChange }) {
     onChange(dataUrl);
     const stream = video.srcObject;
     stream?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
     setStreaming(false);
   };
 
