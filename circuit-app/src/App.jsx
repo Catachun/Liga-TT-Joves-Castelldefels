@@ -1453,6 +1453,16 @@ function PlayerManageRow({ player }) {
     setEditingFed(false);
   };
 
+  const deletePlayer = async () => {
+    if (!window.confirm(t("pm_confirm_delete", { name: player.name, email: player.familyEmail }))) return;
+    if (!window.confirm(t("pm_confirm_delete2"))) return;
+    try {
+      await deleteDoc(doc(db, "players", player.id));
+    } catch {
+      alert(t("pm_delete_error"));
+    }
+  };
+
   return (
     <li>
       {player.name}
@@ -1475,6 +1485,9 @@ function PlayerManageRow({ player }) {
           {player.federat ? `#${player.federatNumber}` : t("reg_federat_label")}
         </button>
       )}
+      <button className="danger small" onClick={deletePlayer}>
+        {t("pm_delete")}
+      </button>
     </li>
   );
 }

@@ -146,6 +146,12 @@ export const TRANSLATIONS = {
     pm_confirm_reactivate: "reactivar",
     pm_confirm_q: 'Segur que vols {action} a "{name}" ({email})?',
     pm_error: "Error actualitzant el jugador.",
+    pm_delete: "Eliminar",
+    pm_confirm_delete:
+      'Això eliminarà PERMANENTMENT el perfil de "{name}" ({email}): ELO, historial, insígnies... no es pot desfer. Vols continuar?',
+    pm_confirm_delete2:
+      "Última confirmació: s'eliminarà per sempre. Segur?",
+    pm_delete_error: "Error eliminant el jugador.",
     playerinfo_title: "Informació de joc",
     playerinfo_club: "Club",
     playerinfo_hand: "Mà",
@@ -467,6 +473,12 @@ export const TRANSLATIONS = {
     pm_confirm_reactivate: "reactivar",
     pm_confirm_q: '¿Seguro que quieres {action} a "{name}" ({email})?',
     pm_error: "Error actualizando el jugador.",
+    pm_delete: "Eliminar",
+    pm_confirm_delete:
+      'Esto eliminará PERMANENTEMENTE el perfil de "{name}" ({email}): ELO, historial, insignias... no se puede deshacer. ¿Quieres continuar?',
+    pm_confirm_delete2:
+      "Última confirmación: se eliminará para siempre. ¿Seguro?",
+    pm_delete_error: "Error eliminando el jugador.",
     playerinfo_title: "Información de juego",
     playerinfo_club: "Club",
     playerinfo_hand: "Mano",
@@ -787,6 +799,12 @@ export const TRANSLATIONS = {
     pm_confirm_reactivate: "reactivate",
     pm_confirm_q: 'Are you sure you want to {action} "{name}" ({email})?',
     pm_error: "Error updating player.",
+    pm_delete: "Delete",
+    pm_confirm_delete:
+      'This will PERMANENTLY delete the profile of "{name}" ({email}): ELO, history, badges... this cannot be undone. Continue?',
+    pm_confirm_delete2:
+      "Final confirmation: this will be deleted forever. Are you sure?",
+    pm_delete_error: "Error deleting player.",
     playerinfo_title: "Playing info",
     playerinfo_club: "Club",
     playerinfo_hand: "Hand",
