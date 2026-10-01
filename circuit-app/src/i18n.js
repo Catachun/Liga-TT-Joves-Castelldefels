@@ -188,6 +188,7 @@ export const TRANSLATIONS = {
     normes_rights_title: "🖼️ Drets d'imatge",
     normes_rights_text:
       "En registrar-se, cada jugador/a accepta que la seva imatge (selfie) es pugui utilitzar dins l'aplicació (rànquing, perfil públic, tarjetes de resultats) i en materials de difusió del club (xarxes socials, cartells). Si el/la participant és menor d'edat, aquest consentiment l'ha de donar el pare/mare/tutor legal en el moment del registre.",
+    privacy_policy_link: "Política de privacitat →",
     jornades_title: "Jornades",
     new_jornada: "+ Nova jornada",
     new_jornada_prompt: "Nom de la jornada (ex: Jornada 5 - Setembre)",
@@ -515,6 +516,7 @@ export const TRANSLATIONS = {
     normes_rights_title: "🖼️ Derechos de imagen",
     normes_rights_text:
       "Al registrarse, cada jugador/a acepta que su imagen (selfie) se pueda utilizar dentro de la aplicación (ranking, perfil público, tarjetas de resultados) y en materiales de difusión del club (redes sociales, carteles). Si el/la participante es menor de edad, este consentimiento lo debe dar el padre/madre/tutor legal en el momento del registro.",
+    privacy_policy_link: "Política de privacidad →",
     jornades_title: "Jornadas",
     new_jornada: "+ Nueva jornada",
     new_jornada_prompt: "Nombre de la jornada (ej: Jornada 5 - Septiembre)",
@@ -840,6 +842,7 @@ export const TRANSLATIONS = {
     normes_rights_title: "🖼️ Image rights",
     normes_rights_text:
       "By registering, each player agrees that their image (selfie) may be used within the app (ranking, public profile, result cards) and in club promotional materials (social media, posters). If the participant is a minor, this consent must be given by a parent/guardian at the time of registration.",
+    privacy_policy_link: "Privacy policy →",
     jornades_title: "Sessions",
     new_jornada: "+ New session",
     new_jornada_prompt: "Session name (e.g. Session 5 - September)",

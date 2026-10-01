@@ -1320,6 +1320,11 @@ function NormesTab() {
       <section>
         <h3>{t("normes_rights_title")}</h3>
         <p>{t("normes_rights_text")}</p>
+        <p>
+          <a className="smallbtn" href="/privacitat.html" target="_blank" rel="noreferrer">
+            {t("privacy_policy_link")}
+          </a>
+        </p>
       </section>
       <p className="copyright">{t("copyright")}</p>
     </div>
@@ -1537,7 +1542,11 @@ function AppShell() {
   const { t } = useLang();
   const [player, setPlayer] = usePersistedPlayer();
   const [admin, setAdmin] = useAdminMode();
-  const [tab, setTab] = useState("ranking");
+  const [tab, setTab] = useState(() => {
+    // Supports PWA shortcuts (manifest.json) that deep-link to a tab, e.g. /?tab=jornades
+    const requested = new URLSearchParams(window.location.search).get("tab");
+    return ["ranking", "jornades", "perfil", "normes", "admin"].includes(requested) ? requested : "ranking";
+  });
   const { players, loading: playersLoading } = usePlayers();
   const { jornadas, loading: jornadasLoading, loadHistoric } = useJornadas();
 
