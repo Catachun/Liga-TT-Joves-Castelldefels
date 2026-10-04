@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pàgina no trobada — TT Joves Castelldefels</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --purple:#7B2FBE; --purple-light:#A15FE0;
+  --yellow:#F5C518; --black:#0A0A0B;
+  --white:#F7F7F5; --muted:rgba(247,247,245,.72); --line:rgba(247,247,245,.15);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:'Inter',sans-serif;background:var(--black);color:var(--white);display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;position:relative;overflow:hidden}
+.texture{position:absolute;inset:0;background-image:linear-gradient(rgba(123,47,190,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(123,47,190,.08) 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(ellipse at 50% 40%,#000 0%,transparent 70%)}
+.wrap{position:relative;max-width:480px}
+.code{font-family:'Bebas Neue',sans-serif;font-size:150px;line-height:1;color:transparent;-webkit-text-stroke:2px var(--purple-light);margin-bottom:8px}
+h1{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:.5px;margin-bottom:16px}
+p{font-size:15px;color:var(--muted);font-weight:300;margin-bottom:32px;line-height:1.6}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;font-weight:700;font-size:13px;text-decoration:none;background:var(--yellow);color:var(--black);text-transform:uppercase;letter-spacing:.5px;transition:background .2s}
+.btn:hover{background:#fff}
+.logo{width:60px;height:60px;border-radius:50%;margin-bottom:28px;border:1.5px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="texture"></div>
+<div class="wrap">
+  <img src="assets/logo.jpg" alt="TT Joves Castelldefels" class="logo">
+  <div class="code">404</div>
+  <h1>Aquesta pàgina no existeix</h1>
+  <p>Sembla que l'enllaç no és correcte o la pàgina s'ha mogut. Torna a l'inici per trobar el que buscaves.</p>
+  <a class="btn" href="/">← Tornar a l'inici</a>
+</div>
+</body>
+</html>
