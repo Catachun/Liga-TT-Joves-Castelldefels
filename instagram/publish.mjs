@@ -44,7 +44,12 @@ for (const file of readdirSync(QUEUE).filter(f => f.endsWith('.json')).sort()) {
   try {
     const image_url = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${post.image}`;
     console.log(`Publicant ${file}…`);
-    const { id: creation_id } = await call(`${IG_USER_ID}/media`, { image_url, caption: post.caption });
+    const { id: creation_id } = await call(`${IG_USER_ID}/media`, {
+      image_url,
+      caption: post.caption,
+      // opcional: "collaborators": ["usuari_sponsor"] a la cua → invitació de publicació en col·laboració (màx. 3)
+      ...(post.collaborators?.length ? { collaborators: JSON.stringify(post.collaborators) } : {}),
+    });
     await waitUntilReady(creation_id);
     const { id } = await call(`${IG_USER_ID}/media_publish`, { creation_id });
     post.published = { id, date: new Date().toISOString() };
