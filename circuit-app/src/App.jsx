@@ -20,6 +20,7 @@ import {
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./firebase";
 import { useLang, LangProvider } from "./i18n";
+import { getFaq, FAQ_TITLE } from "./faq";
 import { MASTER_PIN, MAX_PARTICIPANTS, MAX_WAITLIST, VENUES, JORNADA_PRICE, AFI_LICENSE_PRICE, JOTFORM_FEDERATION_URL, resolvePin, scheduleForDate } from "./config";
 import {
   ELO_START,
@@ -440,6 +441,23 @@ function RankingTab({ players }) {
         <button onClick={() => setShowCalc(true)}>{t("calc_btn")}</button>
       </div>
 
+      <div className="division-ladder">
+        <h3>{t("ranking_ladder_title")}</h3>
+        <p className="hint">{t("ranking_ladder_desc")}</p>
+        {DIVISIONS.map((d, idx) => {
+          const n = active.filter((p) => divisionFor(p.elo || ELO_START).key === d.key).length;
+          const label = d.min === -Infinity ? `< ${DIVISIONS[idx - 1].min}` : `≥ ${d.min}`;
+          return (
+            <div key={d.key} className={`ladder-row ladder-${d.key}`}>
+              <span className="ladder-icon">{d.icon}</span>
+              <span className="ladder-name">{t(`division_${d.key}`)}</span>
+              <span className="ladder-elo">{label}</span>
+              <span className="ladder-count">{n} {t("ranking_ladder_players")}</span>
+            </div>
+          );
+        })}
+      </div>
+
       <div className="stats-bar">
         <div><b>{stats.players}</b> {t("stats_players")}</div>
         <div><b>{Math.round(stats.matches)}</b> {t("stats_matches")}</div>
@@ -515,6 +533,7 @@ function JornadesTab({ player, players, jornadas, loadHistoric, admin }) {
   const [date, setDate] = useState("");
   const [venue, setVenue] = useState("joves");
   const [isTest, setIsTest] = useState(false);
+  const [isFinal, setIsFinal] = useState(false);
 
   if (selected) {
     const j = jornadas.find((x) => x.id === selected) || selected;
@@ -538,6 +557,7 @@ function JornadesTab({ player, players, jornadas, loadHistoric, admin }) {
       date,
       venueKey: venue,
       isTest,
+      isFinal,
       status: "inscripcio",
       schedule,
       participants: [],
@@ -548,6 +568,7 @@ function JornadesTab({ player, players, jornadas, loadHistoric, admin }) {
     setName("");
     setDate("");
     setIsTest(false);
+    setIsFinal(false);
   };
 
   return (
@@ -580,6 +601,10 @@ function JornadesTab({ player, players, jornadas, loadHistoric, admin }) {
               <input type="checkbox" checked={isTest} onChange={(e) => setIsTest(e.target.checked)} />
               {t("jornada_test_label")}
             </label>
+            <label className="checkbox-line">
+              <input type="checkbox" checked={isFinal} onChange={(e) => setIsFinal(e.target.checked)} />
+              {t("jornada_final_label")}
+            </label>
             <button onClick={createJornada}>{t("create_jornada_btn")}</button>
           </div>
         </div>
@@ -592,7 +617,7 @@ function JornadesTab({ player, players, jornadas, loadHistoric, admin }) {
           {jornadas.map((j) => (
             <li key={j.id} className="jornada-row" onClick={() => setSelected(j.id)}>
               <span className="jornada-name">
-                {j.name}{j.isTest ? t("tag_test") : ""}
+                {j.name}{j.isTest ? t("tag_test") : ""}{j.isFinal ? t("tag_final") : ""}
               </span>
               <span className="jornada-date">{j.date}</span>
               <span className={`jornada-status status-${j.status}`}>
@@ -798,6 +823,15 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
     setBusy(false);
   };
 
+  const finalQualifiedIds = jornada.isFinal
+    ? players
+        .filter((p) => p.active !== false)
+        .sort((a, b) => (b.elo || ELO_START) - (a.elo || ELO_START))
+        .slice(0, MAX_PARTICIPANTS)
+        .map((p) => p.id)
+    : [];
+  const finalQualified = !jornada.isFinal || (player && finalQualifiedIds.includes(player.id));
+
   const deleteJornada = async () => {
     if (!window.confirm(t("confirm_delete_jornada", { name: jornada.name }))) return;
     try {
@@ -811,7 +845,7 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
   return (
     <div className="jornada-detail">
       <button className="back-btn" onClick={onBack}>{t("back")}</button>
-      <h2>{jornada.name}{jornada.isTest ? t("tag_test") : ""}</h2>
+      <h2>{jornada.name}{jornada.isTest ? t("tag_test") : ""}{jornada.isFinal ? t("tag_final") : ""}</h2>
       <p className="jornada-meta">
         {jornada.date} · {venue.name} · {t("schedule_opening")}: {schedule.opening} · {t("schedule_start")}: {schedule.start}
       </p>
@@ -825,6 +859,8 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
               <button disabled={busy} className="danger" onClick={leave}>{t("leave_btn")}</button>
             ) : isWaitlisted ? (
               <p className="hint">{t("you_are_waitlisted")}</p>
+            ) : jornada.isFinal && !finalQualified ? (
+              <p className="hint">{t("final_not_qualified", { n: MAX_PARTICIPANTS })}</p>
             ) : participants.length >= MAX_PARTICIPANTS ? (
               <button disabled={busy} onClick={join}>{t("join_waitlist_btn")}</button>
             ) : (
@@ -1263,10 +1299,19 @@ function PerfilTab({ player, players, onLogout, onUpdate }) {
 // Normes tab
 // ---------------------------------------------------------------------------
 function NormesTab() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   return (
     <div className="normes-tab">
       <h2>{t("normes_title")}</h2>
+      <section>
+        <h3>{FAQ_TITLE[lang] || FAQ_TITLE.ca}</h3>
+        {getFaq(lang, { jornada: JORNADA_PRICE, afi: AFI_LICENSE_PRICE, max: MAX_PARTICIPANTS, wait: MAX_WAITLIST }).map(([q, a], i) => (
+          <details key={i} className="faq-item">
+            <summary>{q}</summary>
+            <p>{a}</p>
+          </details>
+        ))}
+      </section>
       <section>
         <h3>{t("normes_howworks_title")}</h3>
         <p>{t("normes_1")}</p>
@@ -1286,12 +1331,16 @@ function NormesTab() {
         <p>{t("normes_5")}</p>
       </section>
       <section>
+        <h3>{t("normes_finals_title")}</h3>
+        <p>{t("normes_finals_desc")}</p>
+      </section>
+      <section>
         <h3>{t("normes_zones_title")}</h3>
         <p>{t("normes_zones_desc")}</p>
       </section>
       <section>
         <h3>{t("normes_trophies_title")}</h3>
-        <p>{t("normes_trophies_desc", { first: SEASON_AWARD_BONUS.first, second: SEASON_AWARD_BONUS.second, third: SEASON_AWARD_BONUS.third })}</p>
+        <p>{t("normes_trophies_desc", { first: SEASON_AWARD_BONUS[1], second: SEASON_AWARD_BONUS[2], third: SEASON_AWARD_BONUS[3] })}</p>
       </section>
       <section className="badges-ref-card">
         <h3>{t("badges_ref_title")}</h3>

@@ -18,7 +18,7 @@ export const VENUES = {
   },
 };
 
-export const JORNADA_PRICE = 7;
+export const JORNADA_PRICE = 6;
 
 // One-off AFI federation license, valid for the whole season, separate from
 // the per-jornada JORNADA_PRICE above.

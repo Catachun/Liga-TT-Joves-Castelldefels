@@ -124,3 +124,13 @@
 .loading-screen{display:flex;align-items:center;justify-content:center;height:100vh;color:var(--muted)}
 .ranking-tab,.jornades-tab,.normes-tab{display:flex;flex-direction:column}
 .admin-panel.master{gap:16px}
+.faq-item{background:var(--card);border-radius:12px;padding:10px 14px;margin-bottom:8px}
+.faq-item summary{cursor:pointer;font-weight:700;color:var(--text)}
+.faq-item p{margin:8px 0 2px;color:var(--muted);line-height:1.4}
+.division-ladder{background:var(--card);border-radius:14px;padding:12px 14px;margin-bottom:14px}
+.division-ladder .hint{margin:4px 0 8px;color:var(--muted);font-size:13px}
+.ladder-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-top:1px solid #322c3a}
+.ladder-icon{font-size:20px;width:26px;text-align:center}
+.ladder-name{font-weight:700;flex:1}
+.ladder-elo{color:var(--yellow);font-size:13px}
+.ladder-count{color:var(--muted);font-size:12px;min-width:84px;text-align:right}
