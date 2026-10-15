@@ -134,3 +134,13 @@
 .ladder-name{font-weight:700;flex:1}
 .ladder-elo{color:var(--yellow);font-size:13px}
 .ladder-count{color:var(--muted);font-size:12px;min-width:84px;text-align:right}
+.next-banner{background:linear-gradient(135deg,var(--yellow),#ffb800);color:var(--black);border-radius:16px;padding:14px 16px;margin-bottom:14px;box-shadow:0 4px 18px rgba(245,197,24,.25)}
+.next-banner-top{display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:13px;letter-spacing:1px}
+.next-banner-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px}
+.next-banner-spots{background:#1a1a1a;color:var(--yellow);padding:3px 10px;border-radius:12px;font-size:12px}
+.next-banner-date{font-family:'Bebas Neue',sans-serif;font-size:32px;line-height:1.05;text-transform:capitalize;margin-top:2px}
+.next-banner-meta{font-size:14px;margin-bottom:10px}
+.next-banner-btn{width:100%;background:#1a1a1a;color:var(--yellow);border:none;border-radius:12px;padding:14px;font-weight:700;font-size:17px;letter-spacing:.5px}
+.next-banner-btn:disabled{opacity:.6}
+.next-banner-ok{margin:0;font-weight:700;font-size:15px}
+.next-banner-link{background:none;border:none;color:#1a1a1a;font-weight:700;text-decoration:underline;padding:8px 0 0;font-size:14px}

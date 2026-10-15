@@ -1585,6 +1585,79 @@ function AdminGate({ admin, setAdmin }) {
 }
 
 // ---------------------------------------------------------------------------
+// Next-jornada banner: always-visible sign-up shortcut shown above every tab
+// ---------------------------------------------------------------------------
+function NextJornadaBanner({ player, players, jornadas, onOpen }) {
+  const { t, lang } = useLang();
+  const [busy, setBusy] = useState(false);
+  const today = new Date().toISOString().slice(0, 10);
+  const j = (jornadas || [])
+    .filter((x) => x.status === "inscripcio" && !x.isTest && (x.date || "") >= today)
+    .sort((a, b) => (a.date || "").localeCompare(b.date || ""))[0];
+  if (!j || !player) return null;
+
+  const participants = j.participants || [];
+  const waitlist = j.waitlist || [];
+  const isIn = participants.some((p) => p.playerId === player.id);
+  const isWait = waitlist.some((p) => p.playerId === player.id);
+  const full = participants.length >= MAX_PARTICIPANTS;
+  const schedule = j.schedule || scheduleForDate(j.date);
+  const locale = lang === "ca" ? "ca-ES" : lang === "es" ? "es-ES" : "en-GB";
+  const dateTxt = new Date(j.date + "T00:00:00").toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" });
+  const qualified = !j.isFinal || (players || [])
+    .filter((p) => p.active !== false)
+    .sort((a, b) => (b.elo || ELO_START) - (a.elo || ELO_START))
+    .slice(0, MAX_PARTICIPANTS)
+    .some((p) => p.id === player.id);
+
+  const join = async () => {
+    setBusy(true);
+    try {
+      const jref = doc(db, "jornadas", j.id);
+      if (full) {
+        if (waitlist.length >= MAX_WAITLIST) {
+          alert(t("jornada_full"));
+        } else {
+          await updateDoc(jref, { waitlist: arrayUnion({ playerId: player.id, joinedAt: Date.now() }) });
+          alert(t("added_to_waitlist", { pos: waitlist.length + 1 }));
+        }
+      } else {
+        await updateDoc(jref, {
+          participants: arrayUnion({ playerId: player.id, confirmed: true, paid: false, joinedAt: Date.now() }),
+        });
+      }
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="next-banner">
+      <div className="next-banner-top">
+        <span className="next-banner-title">{t("next_jornada_title")}{j.isFinal ? t("tag_final") : ""}</span>
+        <span className="next-banner-spots">{t("next_jornada_spots", { n: participants.length, max: MAX_PARTICIPANTS })}</span>
+      </div>
+      <div className="next-banner-date">{dateTxt}</div>
+      <div className="next-banner-meta">
+        {t("next_jornada_open", { opening: schedule.opening, start: schedule.start })}
+      </div>
+      {isIn ? (
+        <p className="next-banner-ok">{t("next_jornada_joined")}</p>
+      ) : isWait ? (
+        <p className="next-banner-ok">{t("next_jornada_waitlisted")}</p>
+      ) : !qualified ? (
+        <p className="next-banner-ok">{t("final_not_qualified", { n: MAX_PARTICIPANTS })}</p>
+      ) : (
+        <button className="next-banner-btn" disabled={busy} onClick={join}>
+          {full ? t("next_jornada_join_wait") : t("next_jornada_join", { price: JORNADA_PRICE })}
+        </button>
+      )}
+      <button className="next-banner-link" onClick={onOpen}>{t("next_jornada_see")} ›</button>
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // App shell
 // ---------------------------------------------------------------------------
 function AppShell() {
@@ -1629,6 +1702,9 @@ function AppShell() {
       </nav>
 
       <main className="tab-content">
+        {liveePlayer && tab !== "admin" && (
+          <NextJornadaBanner player={liveePlayer} players={players} jornadas={jornadas} onOpen={() => setTab("jornades")} />
+        )}
         {tab === "ranking" && <RankingTab players={players} />}
         {tab === "jornades" && (
           <JornadesTab
