@@ -42,14 +42,32 @@ for (const file of readdirSync(QUEUE).filter(f => f.endsWith('.json')).sort()) {
   const post = JSON.parse(readFileSync(path, 'utf8'));
   if (!post.ready || post.published) continue;
   try {
-    const image_url = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${post.image}`;
+    const url = f => `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${f}`;
+    const collab = post.collaborators?.length ? { collaborators: JSON.stringify(post.collaborators) } : {};
     console.log(`Publicant ${file}…`);
-    const { id: creation_id } = await call(`${IG_USER_ID}/media`, {
-      image_url,
-      caption: post.caption,
-      // opcional: "collaborators": ["usuari_sponsor"] a la cua → invitació de publicació en col·laboració (màx. 3)
-      ...(post.collaborators?.length ? { collaborators: JSON.stringify(post.collaborators) } : {}),
-    });
+    let creation_id;
+    if (post.images?.length > 1) {
+      // Carrusel: "images": ["ruta1.jpg", "ruta2.jpg", ...] (2-10 imatges)
+      const children = [];
+      for (const img of post.images) {
+        const { id: child } = await call(`${IG_USER_ID}/media`, { image_url: url(img), is_carousel_item: 'true' });
+        await waitUntilReady(child);
+        children.push(child);
+      }
+      ({ id: creation_id } = await call(`${IG_USER_ID}/media`, {
+        media_type: 'CAROUSEL',
+        children: children.join(','),
+        caption: post.caption,
+        ...collab,
+      }));
+    } else {
+      ({ id: creation_id } = await call(`${IG_USER_ID}/media`, {
+        image_url: url(post.image || post.images[0]),
+        caption: post.caption,
+        // opcional: "collaborators": ["usuari_sponsor"] → invitació de publicació en col·laboració (màx. 3)
+        ...collab,
+      }));
+    }
     await waitUntilReady(creation_id);
     const { id } = await call(`${IG_USER_ID}/media_publish`, { creation_id });
     post.published = { id, date: new Date().toISOString() };
