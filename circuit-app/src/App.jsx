@@ -1446,6 +1446,42 @@ function NormesTab() {
 // ---------------------------------------------------------------------------
 // Admin panels: player management, quota summary, reset stats, season
 // ---------------------------------------------------------------------------
+
+function EmailsPanel({ players, jornadas }) {
+  const [onlyPending, setOnlyPending] = useState(true);
+  const [msg, setMsg] = useState("");
+  const [shown, setShown] = useState("");
+  const nextJ = pickNextJornada(jornadas);
+  const joined = new Set([...(nextJ?.participants || []), ...(nextJ?.waitlist || [])].map((p) => p.playerId));
+  const list = players.filter((p) => p.active !== false && p.familyEmail && (!onlyPending || !nextJ || !joined.has(p.id)));
+  const emails = [...new Set(list.map((p) => p.familyEmail.trim().toLowerCase()))];
+  const text = emails.join(", ");
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setMsg(emails.length + " emails copiats. Enganxa'ls al camp CCO (còpia oculta) del correu.");
+      setShown("");
+    } catch {
+      setMsg("No s'ha pogut copiar automàticament: selecciona i copia el text de sota.");
+      setShown(text);
+    }
+  };
+  return (
+    <div className="quota-panel">
+      <h4>Emails de les famílies</h4>
+      <label className="checkbox-line">
+        <input type="checkbox" checked={onlyPending} onChange={(e) => setOnlyPending(e.target.checked)} />
+        Només els que encara no estan apuntats a la propera jornada
+      </label>
+      <p className="hint small">{emails.length} emails ({list.length} perfils)</p>
+      <button className="secondary small" disabled={!emails.length} onClick={copy}>Copiar emails</button>
+      <p className="hint small">Posa'ls sempre a CCO (còpia oculta) perquè no es vegin entre ells.</p>
+      {msg && <p className="hint small">{msg}</p>}
+      {shown && <textarea readOnly value={shown} rows={4} style={{ width: "100%" }} onFocus={(e) => e.target.select()} />}
+    </div>
+  );
+}
+
 function AdminPanel({ admin, players, jornadas, onExit }) {
   const { t } = useLang();
   const [resetStep, setResetStep] = useState(0);
@@ -1517,6 +1553,8 @@ function AdminPanel({ admin, players, jornadas, onExit }) {
   return (
     <div className="admin-panel master">
       <h3>{t("admin_active")}</h3>
+
+      <EmailsPanel players={players} jornadas={jornadas} />
 
       <div className="quota-panel">
         <h4>Quota per seu</h4>
