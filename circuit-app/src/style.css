@@ -144,3 +144,10 @@
 .next-banner-btn:disabled{opacity:.6}
 .next-banner-ok{margin:0;font-weight:700;font-size:15px}
 .next-banner-link{background:none;border:none;color:#1a1a1a;font-weight:700;text-decoration:underline;padding:8px 0 0;font-size:14px}
+
+.welcome-card{align-items:stretch;text-align:center}
+.welcome-what{font-size:15px;line-height:1.4;color:var(--text);margin:0}
+.welcome-jornada{background:#26212b;border:1px solid var(--yellow);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:4px}
+.welcome-date{font-weight:800;font-size:18px;color:var(--yellow);text-transform:capitalize}
+.welcome-meta{font-size:13px;color:var(--text)}
+.welcome-spots{font-weight:700;font-size:14px;margin-top:4px}

@@ -204,9 +204,26 @@ function SelfieCapture({ value, onChange }) {
 // ---------------------------------------------------------------------------
 // Login / family profile flow
 // ---------------------------------------------------------------------------
-function LoginScreen({ onLogin }) {
+
+function pickNextJornada(jornadas) {
+  const today = new Date().toISOString().slice(0, 10);
+  return (jornadas || [])
+    .filter((x) => x.status === "inscripcio" && !x.isTest && (x.date || "") >= today)
+    .sort((a, b) => (a.date || "").localeCompare(b.date || ""))[0];
+}
+
+function LoginScreen({ onLogin, jornadas }) {
   const { t, lang, setLang } = useLang();
-  const [step, setStep] = useState("email"); // email -> picker|new
+  const [step, setStep] = useState("welcome"); // welcome -> email -> picker|new
+  const [clubMember, setClubMember] = useState(false);
+  const [joinNow, setJoinNow] = useState(true);
+  const nextJ = pickNextJornada(jornadas);
+  const nextJLocale = lang === "ca" ? "ca-ES" : lang === "es" ? "es-ES" : "en-GB";
+  const nextJDate = nextJ ? new Date(nextJ.date + "T00:00:00").toLocaleDateString(nextJLocale, { weekday: "long", day: "numeric", month: "long" }) : "";
+  const nextJSchedule = nextJ ? nextJ.schedule || scheduleForDate(nextJ.date) : null;
+  const nextJVenue = nextJ ? VENUES[nextJ.venueKey] || VENUES.joves : null;
+  const nextJFull = nextJ ? (nextJ.participants || []).length >= MAX_PARTICIPANTS : false;
+  const canJoinNow = !!nextJ && !nextJ.isFinal && !nextJFull;
   const [email, setEmail] = useState("");
   const [familyMembers, setFamilyMembers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -239,23 +256,19 @@ function LoginScreen({ onLogin }) {
       setError(t("err_name_email"));
       return;
     }
-    if (!selfie) {
-      setError(t("err_selfie_required"));
-      return;
-    }
-    if (!consent) {
+    if (selfie && !consent) {
       setError(t("err_consent_required"));
       return;
     }
-    if (!noFederat && !federatNumber.trim()) {
+    if (!noFederat && !clubMember && !federatNumber.trim()) {
       setError(t("err_federat_required"));
       return;
     }
     setLoading(true);
     setError("");
     try {
-      let selfieUrl = selfie;
-      try {
+      let selfieUrl = selfie || null;
+      if (selfie) try {
         const path = `selfies/${uid()}.jpg`;
         const sref = ref(storage, path);
         await uploadString(sref, selfie, "data_url");
@@ -267,9 +280,10 @@ function LoginScreen({ onLogin }) {
         name: name.trim(),
         familyEmail: email.trim().toLowerCase(),
         selfieUrl,
-        consent: true,
-        federatNumber: noFederat ? null : federatNumber.trim(),
-        federat: !noFederat,
+        consent: !!selfie && consent,
+        federatNumber: noFederat || clubMember ? null : federatNumber.trim(),
+        federat: !noFederat && !clubMember,
+        ...(clubMember && !noFederat ? { federationRequestStatus: "club" } : {}),
         club: "",
         hand: "dreta",
         style: "allround",
@@ -286,6 +300,15 @@ function LoginScreen({ onLogin }) {
         createdAt: serverTimestamp(),
       };
       const docRef = await addDoc(collection(db, "players"), newPlayer);
+      if (joinNow && canJoinNow) {
+        try {
+          await updateDoc(doc(db, "jornadas", nextJ.id), {
+            participants: arrayUnion({ playerId: docRef.id, confirmed: true, paid: false, joinedAt: Date.now() }),
+          });
+        } catch {
+          // el perfil ja està creat; es podrà apuntar des de la jornada
+        }
+      }
       onLogin({ id: docRef.id, ...newPlayer });
     } catch {
       setError(t("err_connection"));
@@ -304,6 +327,25 @@ function LoginScreen({ onLogin }) {
       </div>
       <h1>{t("login_title")}</h1>
       <p className="club-name">{t("club")}</p>
+
+      {step === "welcome" && (
+        <div className="login-step welcome-card">
+          <p className="welcome-what">{t("welcome_what")}</p>
+          {nextJ && (
+            <div className="welcome-jornada">
+              <div className="welcome-date">{nextJDate}</div>
+              <div className="welcome-meta">
+                {t("next_jornada_open", { opening: nextJSchedule.opening, start: nextJSchedule.start })} · {nextJVenue.name}
+              </div>
+              <div className="welcome-meta">{t("welcome_price", { price: JORNADA_PRICE })}</div>
+              <div className="welcome-spots">{t("next_jornada_spots", { n: (nextJ.participants || []).length, max: MAX_PARTICIPANTS })}</div>
+            </div>
+          )}
+          <p className="hint">{t("welcome_steps")}</p>
+          <button onClick={() => setStep("email")}>{nextJ && canJoinNow ? t("welcome_cta") : t("welcome_no_jornada_cta")}</button>
+          <button className="secondary" onClick={() => setStep("email")}>{t("welcome_have_profile")}</button>
+        </div>
+      )}
 
       {step === "email" && (
         <div className="login-step">
@@ -360,7 +402,7 @@ function LoginScreen({ onLogin }) {
               type="text"
               placeholder={t("reg_federat_ph")}
               value={federatNumber}
-              disabled={noFederat}
+              disabled={noFederat || clubMember}
               onChange={(e) => setFederatNumber(e.target.value)}
             />
             <label className="checkbox-line">
@@ -369,11 +411,27 @@ function LoginScreen({ onLogin }) {
                 checked={noFederat}
                 onChange={(e) => {
                   setNoFederat(e.target.checked);
-                  if (e.target.checked) setFederatNumber("");
+                  if (e.target.checked) { setFederatNumber(""); setClubMember(false); }
                 }}
               />
               {t("reg_no_federat")}
             </label>
+            {!noFederat && (
+              <>
+                <label className="checkbox-line">
+                  <input
+                    type="checkbox"
+                    checked={clubMember}
+                    onChange={(e) => {
+                      setClubMember(e.target.checked);
+                      if (e.target.checked) setFederatNumber("");
+                    }}
+                  />
+                  {t("reg_club_member")}
+                </label>
+                {clubMember && <p className="hint small">{t("reg_club_member_hint")}</p>}
+              </>
+            )}
             {noFederat && (
               <div className="notify-banner">
                 <p className="hint small">
@@ -396,7 +454,12 @@ function LoginScreen({ onLogin }) {
             {t("login_consent")}
           </label>
           <p className="hint small">{t("login_consent_minor")}</p>
-          <p className="hint">{t("login_hint")}</p>
+          {canJoinNow && (
+            <label className="checkbox-line">
+              <input type="checkbox" checked={joinNow} onChange={(e) => setJoinNow(e.target.checked)} />
+              {t("join_with_profile", { date: nextJDate })}
+            </label>
+          )}
           {error && <p className="error">{error}</p>}
           <button disabled={loading} onClick={submitNewProfile}>
             {loading ? t("entering") : t("create_profile_btn")}
@@ -1526,6 +1589,9 @@ function PlayerManageRow({ player }) {
       {player.federationRequestStatus === "pending" && !player.federat && (
         <span className="tag pending-federation">{t("federation_pending_tag")}</span>
       )}
+      {player.federationRequestStatus === "club" && !player.federat && (
+        <span className="tag pending-federation">{t("club_license_tag")}</span>
+      )}
       <button onClick={toggle}>{player.active === false ? t("pm_reactivate") : t("pm_deactivate")}</button>
       {editingFed ? (
         <span className="fed-editor">
@@ -1679,7 +1745,7 @@ function AppShell() {
   }
 
   if (!player && !admin) {
-    return <LoginScreen onLogin={setPlayer} />;
+    return <LoginScreen onLogin={setPlayer} jornadas={jornadas} />;
   }
 
   return (
