@@ -391,7 +391,7 @@ function allMatchesInOrder(jornada) {
 
 // Applies every finished match of the jornada to the participants' ELO and stats.
 // Returns { updates: {id: fields}, mvp, mvpGain }.
-export function applyJornadaResults(jornada, players) {
+export function applyJornadaResults(jornada, players, opts = {}) {
   const byId = {};
   players.forEach((p) => { byId[p.id] = p; });
   const state = {};
@@ -440,7 +440,7 @@ export function applyJornadaResults(jornada, players) {
     if (!st.touched) return;
     const earned = computeBadges(st);
     const fresh = earned.filter((k) => !st.earnedBadges.includes(k));
-    fresh.forEach((k) => { st.elo += BADGE_POINTS[k] || 0; });
+    if (!opts.noBadges) fresh.forEach((k) => { st.elo += BADGE_POINTS[k] || 0; });
     st.peakElo = Math.max(st.peakElo, st.elo);
     const gain = st.elo - st.startElo;
     if (gain > mvpGain) { mvp = id; mvpGain = gain; }

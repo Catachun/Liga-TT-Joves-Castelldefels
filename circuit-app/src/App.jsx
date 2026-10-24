@@ -485,7 +485,7 @@ function RankingTab({ players, jornadas = [] }) {
   let liveInfo = null;
   if (liveJ) {
     try {
-      const { updates } = applyJornadaResults(liveJ, players);
+      const { updates } = applyJornadaResults(liveJ, players, { noBadges: true });
       if (Object.keys(updates).length) liveInfo = updates;
     } catch (e) { liveInfo = null; }
   }
