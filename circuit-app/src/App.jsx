@@ -930,6 +930,45 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
     setBusy(false);
   };
 
+  // Master only: rebuild the ELO of a closed jornada with the current rules. Every player whose whole
+  // history is this jornada is reset to his state before it and the jornada is replayed.
+  const recalcClosedJornada = async () => {
+    if (jornada.status !== "tancada" || jornada.isTest) return;
+    const inJ = new Set();
+    [...(jornada.groups || []), ...(jornada.groupsR2 || [])].forEach((g) => (g.matches || []).forEach((m) => { [m.p1, m.p2, m.refereeId].forEach((x) => x && inJ.add(x)); }));
+    (jornada.swissRounds || []).forEach((r) => (r.matches || []).forEach((m) => { [m.p1, m.p2, m.refereeId].forEach((x) => x && inJ.add(x)); }));
+    ["bracketGold", "bracketSilver"].forEach((k) => (jornada[k]?.rounds || []).forEach((r) => r.matches.forEach((m) => { [m.p1, m.p2].forEach((x) => x && inJ.add(x)); })));
+    const skipped = [];
+    const base = players.map((p) => {
+      if (!inJ.has(p.id)) return p;
+      const hist = p.matchHistory || [];
+      if (hist.some((h) => h.jornadaId !== jornada.id)) { skipped.push(p.name); return p; }
+      const start = hist.length ? hist[0].eloBefore ?? ELO_START : (p.elo ?? ELO_START);
+      return { ...p, elo: start, peakElo: start, played: 0, wins: 0, losses: 0, matchHistory: [], opponents: [], earnedBadges: [], refereed: 0, podiums: 0, goldTitles: 0, silverTitles: 0, founder: false };
+    });
+    const res = applyJornadaResults(jornada, base);
+    const lines = Object.entries(res.updates)
+      .filter(([id]) => !skipped.includes(players.find((p) => p.id === id)?.name))
+      .map(([id, f]) => { const p = players.find((x) => x.id === id); return `${p?.name}: ${Math.round(p?.elo ?? ELO_START)} → ${Math.round(f.elo)}`; });
+    const msg = `Recalcular l'ELO de «${jornada.name}» amb les regles noves?\n\n${lines.join("\n")}${skipped.length ? `\n\nNo es toquen (tenen historial d'altres jornades): ${skipped.join(", ")}` : ""}`;
+    if (!window.confirm(msg)) return;
+    setBusy(true);
+    try {
+      const batch = writeBatch(db);
+      Object.entries(res.updates).forEach(([id, fields]) => {
+        const p = players.find((x) => x.id === id);
+        if (p && skipped.includes(p.name)) return;
+        batch.update(doc(db, "players", id), fields);
+      });
+      batch.update(doc(db, "jornadas", jornada.id), { podium: { ...(computePodium(jornada) || {}), ...(res.mvp ? { mvp: res.mvp, mvpGain: res.mvpGain } : {}) } });
+      await batch.commit();
+      alert("ELO recalculat.");
+    } catch (e) {
+      alert("No s'ha pogut recalcular: " + (e?.message || e));
+    }
+    setBusy(false);
+  };
+
   const finalQualifiedIds = jornada.isFinal
     ? players
         .filter((p) => p.active !== false)
@@ -1092,6 +1131,11 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
         <BracketsView jornada={jornada} players={players} admin={admin} player={player} bestOf={jornada.bestOf || 5} onSaveResult={saveMatchResult} onClose={closeJornada} />
       )}
 
+      {jornada.status === "tancada" && !jornada.isTest && admin?.type === "master" && (
+        <p className="hint small">
+          <button className="secondary small" disabled={busy} onClick={recalcClosedJornada}>♻️ Recalcular ELO d'aquesta jornada (regles noves)</button>
+        </p>
+      )}
       {jornada.status === "tancada" && jornada.podium && (
         <PodiumView jornada={jornada} players={players} />
       )}
