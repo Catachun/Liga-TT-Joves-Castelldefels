@@ -1482,7 +1482,7 @@ function EmailsPanel({ players, jornadas }) {
   );
 }
 
-function AdminPanel({ admin, players, jornadas, onExit }) {
+function AdminPanel({ admin, players, jornadas, onExit, onImpersonate }) {
   const { t } = useLang();
   const [resetStep, setResetStep] = useState(0);
 
@@ -1570,7 +1570,7 @@ function AdminPanel({ admin, players, jornadas, onExit }) {
         <p>{t("pm_desc", { n: players.length })}</p>
         <ul>
           {players.map((p) => (
-            <PlayerManageRow key={p.id} player={p} />
+            <PlayerManageRow key={p.id} player={p} onImpersonate={onImpersonate} />
           ))}
         </ul>
       </div>
@@ -1586,7 +1586,7 @@ function AdminPanel({ admin, players, jornadas, onExit }) {
   );
 }
 
-function PlayerManageRow({ player }) {
+function PlayerManageRow({ player, onImpersonate }) {
   const { t } = useLang();
   const [editingFed, setEditingFed] = useState(false);
   const [fedNum, setFedNum] = useState(player.federatNumber || "");
@@ -1629,6 +1629,9 @@ function PlayerManageRow({ player }) {
       )}
       {player.federationRequestStatus === "club" && !player.federat && (
         <span className="tag pending-federation">{t("club_license_tag")}</span>
+      )}
+      {onImpersonate && (
+        <button className="secondary small" onClick={() => onImpersonate(player)}>Entrar com a</button>
       )}
       <button onClick={toggle}>{player.active === false ? t("pm_reactivate") : t("pm_deactivate")}</button>
       {editingFed ? (
@@ -1825,7 +1828,7 @@ function AppShell() {
         {tab === "normes" && <NormesTab />}
         {tab === "admin" && (
           admin ? (
-            <AdminPanel admin={admin} players={players} jornadas={jornadas} onExit={() => setAdmin(null)} />
+            <AdminPanel admin={admin} players={players} jornadas={jornadas} onExit={() => setAdmin(null)} onImpersonate={(p) => { setPlayer(p); setTab("jornades"); }} />
           ) : (
             <AdminGate admin={admin} setAdmin={setAdmin} />
           )
