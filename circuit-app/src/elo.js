@@ -1,8 +1,8 @@
 // Core ELO / competition logic for TT Circuit
 
 export const ELO_START = 500;
-const K_NORMAL = 32;
-const K_PROVISIONAL = 60;
+const K_NORMAL = 24;
+const K_PROVISIONAL = 40;
 const PROVISIONAL_GAMES = 5;
 
 export function uid() {
