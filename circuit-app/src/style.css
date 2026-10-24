@@ -179,3 +179,6 @@
 .perfil-avatar{cursor:pointer}
 
 .nick{color:var(--yellow);font-weight:600;font-size:.9em}
+
+.match-row.has-ref{flex-wrap:wrap}
+.match-row .ref{flex-basis:100%;order:8;text-align:center;font-size:11px;color:var(--yellow);opacity:.9}

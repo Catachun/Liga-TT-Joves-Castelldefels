@@ -1108,6 +1108,7 @@ function GroupsView({ jornada, field, players, admin, player, bestOf, onSaveResu
                   match={m}
                   p1={playerById(m.p1)}
                   p2={playerById(m.p2)}
+                  referee={m.refereeId ? playerById(m.refereeId) : null}
                   canEdit={staff || mine(m)}
                   canFix={staff}
                   mine={mine(m)}
@@ -1260,14 +1261,14 @@ function BracketsView({ jornada, players, admin, player, bestOf, onSaveResult, o
   );
 }
 
-function MatchRow({ match, p1, p2, canEdit, canFix, mine, table, bestOf, confirmEntry, onSave, onReset }) {
+function MatchRow({ match, p1, p2, referee, canEdit, canFix, mine, table, bestOf, confirmEntry, onSave, onReset }) {
   const { t } = useLang();
   if (match.bye) {
     return <li className="match-row bye">{p1?.name || p2?.name} — {t("bye_win")}</li>;
   }
   const editing = !match.done && canEdit;
   return (
-    <li className={"match-row" + (mine ? " mine" : "") + (editing ? " editing" : "")}>
+    <li className={"match-row" + (mine ? " mine" : "") + (editing ? " editing" : "") + (referee ? " has-ref" : "")}>
       {match.round && <span className="rnd">R{match.round}{table ? ` · M${table}` : ""}</span>}
       <span>{p1?.name}</span>
       {match.done ? (
@@ -1284,6 +1285,7 @@ function MatchRow({ match, p1, p2, canEdit, canFix, mine, table, bestOf, confirm
         <span className="result pending">vs</span>
       )}
       <span>{p2?.name}</span>
+      {referee && !match.done && <small className="ref">⚖️ Àrbitre: {referee.name}</small>}
       {editing && (
         <ResultEditor names={[p1?.name, p2?.name]} bestOf={bestOf} confirmEntry={confirmEntry} onSave={onSave} />
       )}
