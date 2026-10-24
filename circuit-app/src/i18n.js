@@ -634,7 +634,7 @@ export const TRANSLATIONS = {
     normes_title: "Normas del TT Circuit",
     normes_1: "Circuito mensual abierto a cualquier jugador/a de la zona.",
     normes_2: "Inscripción: 6€, se pagan en efectivo el mismo día de la jornada.",
-    normes_3: "Ranking ELO global, todos empiezan con 500 puntos (K=40 als 5 primers partits, després K=24).",
+    normes_3: "Ranking ELO global, todos empiezan con 500 puntos (K=40 los 5 primeros partidos, K=24 después).",
     normes_4:
       "Según el número de inscritos, la organización elige el formato: fase de grupos + Cuadro Oro/Plata, o Sistema Suizo (rondas emparejadas por ELO).",
     normes_5: "Los resultados se cargan en la app justo después de cada partido.",
@@ -1036,7 +1036,7 @@ export const TRANSLATIONS = {
     normes_title: "TT Circuit Rules",
     normes_1: "Monthly circuit open to any player in the area.",
     normes_2: "Entry fee: €6, paid in cash on the day of the session.",
-    normes_3: "Global ELO ranking, everyone starts at 500 points (K=40 als 5 primers partits, després K=24).",
+    normes_3: "Global ELO ranking, everyone starts at 500 points (K=40 for the first 5 games, K=24 after).",
     normes_4:
       "Depending on the number of entries, organizers choose the format: group stage + Gold/Silver bracket, or Swiss System (rounds paired by ELO).",
     normes_5: "Results are entered into the app right after each match.",
