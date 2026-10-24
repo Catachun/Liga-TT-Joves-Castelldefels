@@ -43,3 +43,6 @@ export function scheduleForDate(dateStr) {
   if (day === 6) return { opening: "8:20", start: "9:00" };
   return { opening: "16:15", start: "17:00" };
 }
+
+// Taules disponibles a la sala (per assignar taula a cada partit de grups)
+export const TABLES_AVAILABLE = 6;

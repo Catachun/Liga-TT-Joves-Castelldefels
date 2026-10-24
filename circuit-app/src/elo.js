@@ -51,200 +51,285 @@ export function divisionFor(elo) {
 }
 
 // ---------- Groups (round robin) ----------
-export function makeGroups(sortedPlayers, targetSize = 4) {
-  const n = sortedPlayers.length;
-  const numGroups = Math.max(1, Math.round(n / targetSize));
-  const groups = Array.from({ length: numGroups }, (_, i) => ({
-    id: uid(),
-    name: `Grup ${String.fromCharCode(65 + i)}`,
-    playerIds: [],
-  }));
-  // snake seeding so groups are balanced by strength
+function shuffle(arr) {
+  const r = [...arr];
+  for (let i = r.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [r[i], r[j]] = [r[j], r[i]];
+  }
+  return r;
+}
+
+// ids: array of player ids. ratings: { id: elo }. Returns an array of groups,
+// each group being an array of player ids (snake seeding by rating; ties random).
+export function makeGroups(ids, ratings = {}) {
+  const n = ids.length;
+  let numGroups;
+  if (n <= 9) numGroups = 1;
+  else if (n <= 16) numGroups = 2;
+  else numGroups = Math.max(2, Math.round(n / 5));
+  const sorted = shuffle(ids).sort((a, b) => (ratings[b] ?? ELO_START) - (ratings[a] ?? ELO_START));
+  const groups = Array.from({ length: numGroups }, () => []);
   let dir = 1, g = 0;
-  sortedPlayers.forEach((p) => {
-    groups[g].playerIds.push(p.id);
+  sorted.forEach((id) => {
+    groups[g].push(id);
     g += dir;
     if (g === numGroups) { g = numGroups - 1; dir = -1; }
     else if (g < 0) { g = 0; dir = 1; }
   });
-  return groups.map((grp) => ({ ...grp, matches: roundRobin(grp.playerIds) }));
+  return groups;
 }
 
+// Round robin scheduled by rounds (circle method): everybody plays once per round.
+// With an odd number of players one rests each round and acts as referee.
 export function roundRobin(playerIds) {
+  const list = [...playerIds];
+  if (list.length % 2) list.push(null);
+  const n = list.length;
   const matches = [];
-  for (let i = 0; i < playerIds.length; i++) {
-    for (let j = i + 1; j < playerIds.length; j++) {
-      const others = playerIds.filter((id) => id !== playerIds[i] && id !== playerIds[j]);
-      const refereeId = others.length > 0 ? others[matches.length % others.length] : null;
-      matches.push({ id: uid(), p1: playerIds[i], p2: playerIds[j], s1: null, s2: null, winner: null, refereeId });
+  for (let r = 0; r < n - 1; r++) {
+    let resting = null;
+    for (let i = 0; i < n / 2; i++) {
+      const a = list[i], b = list[n - 1 - i];
+      if (a == null || b == null) { resting = a ?? b; continue; }
+      matches.push({ id: uid(), round: r + 1, p1: a, p2: b, s1: null, s2: null, done: false, refereeId: null });
     }
+    if (resting != null) {
+      matches.forEach((m) => { if (m.round === r + 1) m.refereeId = resting; });
+    }
+    list.splice(1, 0, list.pop());
   }
   return matches;
 }
 
-export function groupStandings(group, playersById) {
+export function groupStandings(group) {
   const stats = {};
-  (group.playerIds || []).forEach((id) => { stats[id] = { id, w: 0, l: 0, setsWon: 0, setsLost: 0 }; });
+  (group.players || []).forEach((id) => {
+    stats[id] = { playerId: id, wins: 0, losses: 0, setsWon: 0, setsLost: 0 };
+  });
   (group.matches || []).forEach((m) => {
-    if (m.winner == null) return;
-    const loser = m.winner === m.p1 ? m.p2 : m.p1;
-    if (stats[m.winner]) stats[m.winner].w++;
-    if (stats[loser]) stats[loser].l++;
-    if (stats[m.p1]) { stats[m.p1].setsWon += m.s1 || 0; stats[m.p1].setsLost += m.s2 || 0; }
-    if (stats[m.p2]) { stats[m.p2].setsWon += m.s2 || 0; stats[m.p2].setsLost += m.s1 || 0; }
+    if (!m.done || m.bye || m.s1 == null || m.s2 == null) return;
+    const w = m.s1 > m.s2 ? m.p1 : m.p2;
+    const l = m.s1 > m.s2 ? m.p2 : m.p1;
+    if (stats[w]) stats[w].wins++;
+    if (stats[l]) stats[l].losses++;
+    if (stats[m.p1]) { stats[m.p1].setsWon += m.s1; stats[m.p1].setsLost += m.s2; }
+    if (stats[m.p2]) { stats[m.p2].setsWon += m.s2; stats[m.p2].setsLost += m.s1; }
   });
   return Object.values(stats).sort((a, b) => {
-    if (b.w !== a.w) return b.w - a.w;
-    const diffA = a.setsWon - a.setsLost, diffB = b.setsWon - b.setsLost;
-    return diffB - diffA;
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    const da = a.setsWon - a.setsLost, db = b.setsWon - b.setsLost;
+    if (db !== da) return db - da;
+    return b.setsWon - a.setsWon;
   });
 }
 
 export function groupComplete(group) {
-  return (group.matches || []).every((m) => m.winner != null);
+  return (group.matches || []).every((m) => m.done || m.bye);
 }
 
-// ---------- Grups Nivellats (level-reseeded second round) ----------
-export function buildLevelGroups(round1Groups, playersById) {
-  const maxSize = Math.max(0, ...round1Groups.map((g) => g.playerIds.length));
+// standingsByGroup: array of arrays of standing rows. Returns arrays of ids:
+// tier 1 = every group's 1st, tier 2 = every group's 2nd, ...
+export function buildLevelGroups(standingsByGroup) {
+  const maxSize = Math.max(0, ...standingsByGroup.map((s) => s.length));
   const tiers = Array.from({ length: maxSize }, () => []);
-  round1Groups.forEach((g) => {
-    const standings = groupStandings(g, playersById);
-    standings.forEach((s, rankIdx) => { tiers[rankIdx].push(s.id); });
-  });
-  return tiers
-    .filter((t) => t.length > 0)
-    .map((ids, i) => ({ id: uid(), name: `Nivell ${i + 1}`, playerIds: ids, matches: roundRobin(ids) }));
+  standingsByGroup.forEach((s) => s.forEach((row, rank) => tiers[rank].push(row.playerId)));
+  return tiers.filter((t) => t.length > 1);
 }
 
 // ---------- Bracket (Quadre Or/Plata) ----------
+function seedOrder(size) {
+  let arr = [1];
+  while (arr.length < size) {
+    const n = arr.length * 2;
+    arr = arr.flatMap((x) => [x, n + 1 - x]);
+  }
+  return arr;
+}
+
+// playerIds in seed order (best first). Returns { rounds: [[match]] } or null if < 2 players.
 export function buildBracket(playerIds) {
+  if (!playerIds || playerIds.length < 2) return null;
   let size = 2;
   while (size < playerIds.length) size *= 2;
-  const seeded = [...playerIds];
-  while (seeded.length < size) seeded.push(null); // bye
+  const order = seedOrder(size);
   const round1 = [];
-  for (let i = 0; i < size / 2; i++) {
-    const p1 = seeded[i];
-    const p2 = seeded[size - 1 - i];
-    const isBye = p1 == null || p2 == null;
-    round1.push({
-      id: uid(), round: 1, p1, p2,
-      s1: null, s2: null,
-      winner: isBye ? (p1 ?? p2) : null,
-      bye: isBye,
-    });
+  for (let i = 0; i < order.length; i += 2) {
+    const p1 = playerIds[order[i] - 1] ?? null;
+    const p2 = playerIds[order[i + 1] - 1] ?? null;
+    const bye = p1 == null || p2 == null;
+    round1.push({ id: uid(), p1, p2, s1: null, s2: null, winner: bye ? (p1 ?? p2) : null, done: bye, bye });
   }
-  const rounds = [round1];
-  let currentSize = round1.length;
-  let roundNum = 2;
-  while (currentSize > 1) {
-    const nextRound = [];
-    for (let i = 0; i < currentSize / 2; i++) {
-      nextRound.push({ id: uid(), round: roundNum, p1: null, p2: null, s1: null, s2: null, winner: null, bye: false });
-    }
-    rounds.push(nextRound);
-    currentSize = nextRound.length;
-    roundNum++;
+  const rounds = [{ matches: round1 }];
+  let count = round1.length;
+  while (count > 1) {
+    count /= 2;
+    rounds.push({ matches: Array.from({ length: count }, () => ({ id: uid(), p1: null, p2: null, s1: null, s2: null, winner: null, done: false, bye: false })) });
   }
-  return propagateBracket(rounds);
+  return fillBracket({ rounds });
 }
 
-// Advances winners into the next round's slots. Only auto-resolves a bye when
-// the sibling feeder match is a PERMANENT structural bye (both slots empty) —
-// never merely undecided — to avoid prematurely awarding a walkover to someone
-// whose real opponent just hasn't finished their earlier match yet.
-export function propagateBracket(rounds) {
-  const newRounds = rounds.map((r) => r.map((m) => ({ ...m })));
-  for (let ri = 0; ri < newRounds.length - 1; ri++) {
-    const round = newRounds[ri];
-    const nextRound = newRounds[ri + 1];
-    for (let i = 0; i < round.length; i++) {
-      const match = round[i];
-      const nextMatch = nextRound[Math.floor(i / 2)];
-      const slot = i % 2 === 0 ? "p1" : "p2";
-      if (match.winner != null) {
-        nextMatch[slot] = match.winner;
-      } else {
-        nextMatch[slot] = null;
-      }
-    }
-  }
-  // resolve structural byes (both slots empty is impossible at leaf; byes only
-  // happen when the OTHER slot of a next-round match is also a permanent bye)
-  for (let ri = 1; ri < newRounds.length; ri++) {
-    newRounds[ri].forEach((m) => {
-      const structuralBye = (m.p1 == null) !== (m.p2 == null) &&
-        // only treat as resolved bye if the feeding match itself was a bye (permanent),
-        // not simply because the previous match hasn't been played yet
-        newRounds[ri - 1].some((fm) => fm.bye && (fm.winner === m.p1 || fm.winner === m.p2));
-      if (structuralBye && m.winner == null) {
-        m.winner = m.p1 ?? m.p2;
-        m.bye = true;
-      }
+function fillBracket(bracket) {
+  const rounds = bracket.rounds.map((r) => ({ ...r, matches: r.matches.map((m) => ({ ...m })) }));
+  for (let ri = 0; ri < rounds.length - 1; ri++) {
+    rounds[ri].matches.forEach((m, i) => {
+      const next = rounds[ri + 1].matches[Math.floor(i / 2)];
+      next[i % 2 === 0 ? "p1" : "p2"] = m.winner ?? null;
     });
   }
-  return newRounds;
+  return { ...bracket, rounds };
 }
 
-export function bracketRoundName(roundIdx, totalRounds, t) {
-  const fromEnd = totalRounds - roundIdx;
+// Set (or clear, with s1 == null) the result of one match and propagate winners.
+// Throws Error("downstream_done") if a later match depends on a result that would change.
+export function propagateBracket(bracket, matchId, s1, s2) {
+  const rounds = bracket.rounds.map((r) => ({ ...r, matches: r.matches.map((m) => ({ ...m })) }));
+  let found = false;
+  rounds.forEach((r) => r.matches.forEach((m) => {
+    if (m.id !== matchId) return;
+    found = true;
+    if (s1 == null) { m.s1 = null; m.s2 = null; m.winner = null; m.done = false; }
+    else { m.s1 = s1; m.s2 = s2; m.winner = s1 > s2 ? m.p1 : m.p2; m.done = true; }
+  }));
+  if (!found) return bracket;
+  const next = fillBracket({ ...bracket, rounds });
+  for (let ri = 1; ri < next.rounds.length; ri++) {
+    next.rounds[ri].matches.forEach((m, i) => {
+      const before = bracket.rounds[ri].matches[i];
+      if (before.done && (before.p1 !== m.p1 || before.p2 !== m.p2)) throw new Error("downstream_done");
+      if (!m.p1 || !m.p2) { if (!m.done) { m.winner = null; } }
+    });
+  }
+  return next;
+}
+
+export function bracketRoundName(total, idx, t) {
+  const fromEnd = total - idx;
   if (fromEnd === 1) return t("final");
-  if (fromEnd === 2) return t("semifinal");
+  if (fromEnd === 2) return t("semifinals");
   if (fromEnd === 3) return t("quarts");
-  return t("round_of", { n: roundIdx + 1 });
+  return t("round_label", { n: idx + 1 });
 }
 
 // ---------- Sistema Suís ----------
-export function generateSwissRound(playerIds, previousRounds) {
-  const played = new Set();
-  previousRounds.forEach((r) => r.matches.forEach((m) => {
-    if (m.p2) played.add(`${m.p1}|${m.p2}`), played.add(`${m.p2}|${m.p1}`);
-  }));
-  const available = [...playerIds];
+// ratings: score used for pairing (higher first). played: array of "a-b" (ids sorted) pairs.
+export function generateSwissRound(playerIds, ratings = {}, played = []) {
+  const done = new Set(played);
+  const key = (a, b) => [a, b].sort().join("-");
+  const pool = [...playerIds].sort((a, b) => (ratings[b] ?? 0) - (ratings[a] ?? 0));
   const matches = [];
-  while (available.length > 1) {
-    const p1 = available.shift();
-    let idx = available.findIndex((p2) => !played.has(`${p1}|${p2}`));
-    if (idx === -1) idx = 0;
-    const p2 = available.splice(idx, 1)[0];
-    matches.push({ id: uid(), p1, p2, s1: null, s2: null, winner: null });
+  if (pool.length % 2) {
+    // bye to the lowest-ranked player
+    const bye = pool.pop();
+    matches.push({ id: uid(), p1: bye, p2: null, s1: null, s2: null, winner: bye, done: true, bye: true });
   }
-  if (available.length === 1) {
-    matches.push({ id: uid(), p1: available[0], p2: null, s1: null, s2: null, winner: available[0], bye: true });
+  while (pool.length > 1) {
+    const p1 = pool.shift();
+    let idx = pool.findIndex((p2) => !done.has(key(p1, p2)));
+    if (idx === -1) idx = 0;
+    const p2 = pool.splice(idx, 1)[0];
+    matches.push({ id: uid(), p1, p2, s1: null, s2: null, winner: null, done: false });
   }
   return matches;
 }
 
-// ---------- Podium ----------
-export function computePodium(jornada) {
-  if (jornada.format === "nivellats") return null; // no single champion by design
-  if (jornada.format === "suis" && jornada.swiss) {
-    const wins = {};
-    jornada.swiss.playerIds.forEach((id) => { wins[id] = 0; });
-    jornada.swiss.rounds.forEach((r) => r.matches.forEach((m) => {
-      if (m.winner && wins[m.winner] != null) wins[m.winner]++;
-    }));
-    const sorted = Object.entries(wins).sort((a, b) => b[1] - a[1]);
-    return sorted.slice(0, 3).map(([id]) => id);
-  }
-  if (jornada.brackets) {
-    const gold = jornada.brackets.gold;
-    if (gold && gold.length) {
-      const final = gold[gold.length - 1][0];
-      if (final && final.winner) {
-        const champion = final.winner;
-        const runnerUp = final.p1 === champion ? final.p2 : final.p1;
-        const semis = gold[gold.length - 2] || [];
-        const thirds = semis
-          .filter((m) => m.winner && ![champion, runnerUp].includes(m.winner))
-          .map((m) => (m.winner === m.p1 ? m.p2 : m.p1))
-          .filter(Boolean);
-        return [champion, runnerUp, thirds[0]].filter(Boolean);
-      }
+// ---------- Results -> ELO ----------
+function allMatchesInOrder(jornada) {
+  const out = [];
+  (jornada.groups || []).forEach((g) => (g.matches || []).forEach((m) => out.push(m)));
+  (jornada.groupsR2 || []).forEach((g) => (g.matches || []).forEach((m) => out.push(m)));
+  (jornada.swissRounds || []).forEach((r) => (r.matches || []).forEach((m) => out.push(m)));
+  [jornada.bracketSilver, jornada.bracketGold].forEach((b) => {
+    (b?.rounds || []).forEach((r) => r.matches.forEach((m) => out.push(m)));
+  });
+  return out;
+}
+
+// Applies every finished match of the jornada to the participants' ELO and stats.
+// Returns { updates: {id: fields}, mvp, mvpGain }.
+export function applyJornadaResults(jornada, players) {
+  const byId = {};
+  players.forEach((p) => { byId[p.id] = p; });
+  const state = {};
+  const get = (id) => {
+    if (!state[id]) {
+      const p = byId[id] || {};
+      state[id] = {
+        elo: p.elo ?? ELO_START, peakElo: p.peakElo ?? ELO_START, played: p.played || 0,
+        wins: p.wins || 0, losses: p.losses || 0,
+        matchHistory: [...(p.matchHistory || [])], opponents: [...(p.opponents || [])],
+        earnedBadges: [...(p.earnedBadges || [])], startElo: p.elo ?? ELO_START, touched: false,
+      };
     }
+    return state[id];
+  };
+  allMatchesInOrder(jornada).forEach((m) => {
+    if (!m.done || m.bye || !m.p1 || !m.p2 || m.s1 == null || m.s2 == null || m.s1 === m.s2) return;
+    const a = get(m.p1), b = get(m.p2);
+    const aWins = m.s1 > m.s2;
+    const { newA, newB } = calcELO(a, b, aWins ? 1 : 0);
+    const push = (me, opp, oppId, own, theirs, win, before, after) => {
+      me.touched = true;
+      me.played++; if (win) me.wins++; else me.losses++;
+      me.matchHistory.push({ jornadaId: jornada.id, date: jornada.date || null, opponentId: oppId, result: win ? "win" : "loss", s1: own, s2: theirs, eloBefore: before, eloAfter: after });
+      if (!me.opponents.includes(oppId)) me.opponents.push(oppId);
+    };
+    const aBefore = a.elo, bBefore = b.elo;
+    push(a, b, m.p2, m.s1, m.s2, aWins, aBefore, newA);
+    push(b, a, m.p1, m.s2, m.s1, !aWins, bBefore, newB);
+    a.elo = newA; b.elo = newB;
+    a.peakElo = Math.max(a.peakElo, a.elo); b.peakElo = Math.max(b.peakElo, b.elo);
+  });
+  const updates = {};
+  let mvp = null, mvpGain = 0;
+  Object.entries(state).forEach(([id, st]) => {
+    if (!st.touched) return;
+    const earned = computeBadges(st);
+    const fresh = earned.filter((k) => !st.earnedBadges.includes(k));
+    fresh.forEach((k) => { st.elo += BADGE_POINTS[k] || 0; });
+    st.peakElo = Math.max(st.peakElo, st.elo);
+    const gain = st.elo - st.startElo;
+    if (gain > mvpGain) { mvp = id; mvpGain = gain; }
+    updates[id] = {
+      elo: st.elo, peakElo: st.peakElo, played: st.played, wins: st.wins, losses: st.losses,
+      matchHistory: st.matchHistory, opponents: st.opponents, earnedBadges: earned,
+    };
+  });
+  return { updates, mvp, mvpGain };
+}
+
+// ---------- Podium ----------
+function bracketPodium(bracket) {
+  const rounds = bracket?.rounds || [];
+  if (!rounds.length) return null;
+  const final = rounds[rounds.length - 1].matches[0];
+  if (!final || !final.winner) return null;
+  const first = final.winner;
+  const second = final.p1 === first ? final.p2 : final.p1;
+  const semis = rounds.length >= 2 ? rounds[rounds.length - 2].matches : [];
+  const losers = semis
+    .filter((m) => m.done && !m.bye && m.winner)
+    .map((m) => ({ id: m.winner === m.p1 ? m.p2 : m.p1, games: m.winner === m.p1 ? m.s2 : m.s1 }))
+    .sort((x, y) => (y.games || 0) - (x.games || 0));
+  return { first, second, third: losers[0]?.id || null };
+}
+
+export function computePodium(jornada) {
+  if (jornada.format === "nivellats") return null;
+  if (jornada.format === "suis") {
+    const wins = {};
+    (jornada.swissRounds || []).forEach((r) => (r.matches || []).forEach((m) => {
+      if (m.p1 && wins[m.p1] == null) wins[m.p1] = 0;
+      if (m.p2 && wins[m.p2] == null) wins[m.p2] = 0;
+      if (m.done && m.s1 != null && m.s2 != null && m.s1 !== m.s2) wins[m.s1 > m.s2 ? m.p1 : m.p2]++;
+      else if (m.bye) wins[m.p1]++;
+    }));
+    const sorted = Object.entries(wins).sort((a, b) => b[1] - a[1]).map(([id]) => id);
+    if (!sorted.length) return null;
+    return { gold: { first: sorted[0] || null, second: sorted[1] || null, third: sorted[2] || null } };
   }
-  return null;
+  const gold = bracketPodium(jornada.bracketGold);
+  return gold ? { gold } : null;
 }
 
 // ---------- Badges ----------
@@ -273,7 +358,7 @@ export function computeBadges(player) {
 
   let streak = 0, maxStreak = 0;
   history.forEach((m) => {
-    if (m.result === "V") { streak++; maxStreak = Math.max(maxStreak, streak); }
+    if (m.result === "win") { streak++; maxStreak = Math.max(maxStreak, streak); }
     else streak = 0;
   });
   if (maxStreak >= 3) badges.add("streak3");
@@ -288,7 +373,7 @@ export function computeBadges(player) {
   const rivals = new Set(history.map((m) => m.opponentId).filter(Boolean));
   if (rivals.size >= 10) badges.add("social10");
 
-  const cleanSweeps = history.filter((m) => m.result === "V" && (m.setsLost || 0) === 0).length;
+  const cleanSweeps = history.filter((m) => m.result === "win" && (m.s2 || 0) === 0).length;
   if (cleanSweeps >= 5) badges.add("clean_sweep");
   if (cleanSweeps >= 10) badges.add("cleansweep10");
 

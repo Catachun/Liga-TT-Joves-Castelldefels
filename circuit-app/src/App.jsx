@@ -21,7 +21,7 @@ import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./firebase";
 import { useLang, LangProvider } from "./i18n";
 import { getFaq, FAQ_TITLE } from "./faq";
-import { MASTER_PIN, MAX_PARTICIPANTS, MAX_WAITLIST, VENUES, JORNADA_PRICE, AFI_LICENSE_PRICE, JOTFORM_FEDERATION_URL, resolvePin, scheduleForDate } from "./config";
+import { MASTER_PIN, MAX_PARTICIPANTS, MAX_WAITLIST, VENUES, JORNADA_PRICE, TABLES_AVAILABLE, AFI_LICENSE_PRICE, JOTFORM_FEDERATION_URL, resolvePin, scheduleForDate } from "./config";
 import {
   ELO_START,
   uid,
@@ -40,6 +40,7 @@ import {
   bracketRoundName,
   generateSwissRound,
   computePodium,
+  applyJornadaResults,
   BADGE_ICONS,
   BADGE_POINTS,
   computeBadges,
@@ -806,13 +807,18 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
     setBusy(false);
   };
 
+  // s1 == null clears the result (admin correction).
   const saveMatchResult = async (field, groupId, matchId, s1, s2) => {
     const jref = doc(db, "jornadas", jornada.id);
     const list = [...(jornada[field] || [])];
-    const gIdx = list.findIndex((g) => g.id === groupId);
+    const patch = (m) => (m.id === matchId
+      ? (s1 == null ? { ...m, s1: null, s2: null, done: false } : { ...m, s1, s2, done: true })
+      : m);
+    let gIdx = groupId == null
+      ? list.findIndex((g) => (g.matches || []).some((m) => m.id === matchId))
+      : list.findIndex((g) => g.id === groupId);
     if (gIdx === -1) return;
-    const group = { ...list[gIdx], matches: list[gIdx].matches.map((m) => (m.id === matchId ? { ...m, s1, s2, done: true } : m)) };
-    list[gIdx] = group;
+    list[gIdx] = { ...list[gIdx], matches: list[gIdx].matches.map(patch) };
     await updateDoc(jref, { [field]: list });
   };
 
@@ -839,50 +845,48 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
       return;
     }
     const standingsByGroup = groups.map((g) => groupStandings(g));
+    // The better half of every group goes to Gold (2 of 4, 3 of 5-6, 4 of 7),
+    // seeded by finishing position so group winners are kept apart.
     const gold = [];
     const silver = [];
-    standingsByGroup.forEach((s) => {
-      s.forEach((row, idx) => {
-        if (idx === 0 || idx === 1) gold.push(row.playerId);
-        else silver.push(row.playerId);
+    const maxLen = Math.max(0, ...standingsByGroup.map((s) => s.length));
+    for (let r = 0; r < maxLen; r++) {
+      standingsByGroup.forEach((s) => {
+        if (r >= s.length) return;
+        (r < Math.ceil(s.length / 2) ? gold : silver).push(s[r].playerId);
       });
-    });
+    }
     await updateDoc(doc(db, "jornadas", jornada.id), {
       status: "eliminatories",
       bracketGold: buildBracket(gold),
-      bracketSilver: buildBracket(silver),
+      bracketSilver: buildBracket(silver) || null,
     });
   };
 
   const closeJornada = async () => {
     if (!window.confirm(t("confirm_close_jornada"))) return;
+    if (jornada.status === "tancada") return;
     setBusy(true);
-    const podium = computePodium(jornada, players);
-    const batch = writeBatch(db);
-    // recompute ELO for all participants based on match history in this jornada
-    const involvedIds = participants.map((p) => p.playerId);
-    involvedIds.forEach((id) => {
-      const p = playerById(id);
-      if (!p) return;
-      const pRef = doc(db, "players", id);
-      const newBadges = computeBadges(p);
-      batch.update(pRef, {
-        matchHistory: p.matchHistory || [],
-        earnedBadges: newBadges.earned,
-        elo: p.elo,
-        peakElo: peakEloFor(p),
-      });
-    });
-    if (!jornada.isTest) {
-      batch.update(doc(db, "jornadas", jornada.id), {
-        status: "tancada",
-        closedAt: serverTimestamp(),
-        podium,
-      });
-    } else {
-      batch.update(doc(db, "jornadas", jornada.id), { status: "tancada", closedAt: serverTimestamp() });
+    try {
+      const podium = computePodium(jornada) || null;
+      const batch = writeBatch(db);
+      let mvp = null, mvpGain = 0;
+      if (!jornada.isTest) {
+        const res = applyJornadaResults(jornada, players);
+        mvp = res.mvp; mvpGain = res.mvpGain;
+        Object.entries(res.updates).forEach(([id, fields]) => {
+          batch.update(doc(db, "players", id), fields);
+        });
+      }
+      const jUpdate = { status: "tancada", closedAt: serverTimestamp() };
+      if (!jornada.isTest) {
+        jUpdate.podium = { ...(podium || {}), ...(mvp ? { mvp, mvpGain } : {}) };
+      }
+      batch.update(doc(db, "jornadas", jornada.id), jUpdate);
+      await batch.commit();
+    } catch (e) {
+      alert("No s'ha pogut tancar la jornada: " + (e?.message || e));
     }
-    await batch.commit();
     setBusy(false);
   };
 
@@ -984,6 +988,7 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
           field={jornada.status === "grups_r2" ? "groupsR2" : "groups"}
           players={players}
           admin={admin}
+          player={player}
           onSaveResult={saveMatchResult}
           onNextStep={
             jornada.status === "grups_r1"
@@ -998,11 +1003,11 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
       )}
 
       {jornada.status === "suis" && (
-        <SwissView jornada={jornada} players={players} admin={admin} onSaveResult={saveMatchResult} onClose={closeJornada} />
+        <SwissView jornada={jornada} players={players} admin={admin} player={player} onSaveResult={saveMatchResult} onClose={closeJornada} />
       )}
 
       {jornada.status === "eliminatories" && (
-        <BracketsView jornada={jornada} players={players} admin={admin} onSaveResult={saveMatchResult} onClose={closeJornada} />
+        <BracketsView jornada={jornada} players={players} admin={admin} player={player} onSaveResult={saveMatchResult} onClose={closeJornada} />
       )}
 
       {jornada.status === "tancada" && jornada.podium && (
@@ -1016,20 +1021,30 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
   );
 }
 
-function GroupsView({ jornada, field, players, admin, onSaveResult, onNextStep, nextStepLabel, onCloseNoBrackets }) {
+function GroupsView({ jornada, field, players, admin, player, onSaveResult, onNextStep, nextStepLabel, onCloseNoBrackets }) {
   const { t } = useLang();
   const groups = jornada[field] || [];
   const playerById = (id) => players.find((p) => p.id === id);
-  const canEdit = admin?.type === "master" || admin?.type === "venue" || admin?.type === "referee";
+  const staff = admin?.type === "master" || admin?.type === "venue" || admin?.type === "referee";
+  const mine = (m) => !!player && (m.p1 === player.id || m.p2 === player.id);
   const allComplete = groups.every((g) => groupComplete(g));
+  // table suggestion: within each round, matches of all groups are numbered in order
+  const tableOf = (gi, m) => {
+    let n = 0;
+    groups.forEach((g, i) => {
+      if (i < gi) n += g.matches.filter((x) => x.round === m.round).length;
+    });
+    n += groups[gi].matches.filter((x) => x.round === m.round).findIndex((x) => x.id === m.id) + 1;
+    return n <= TABLES_AVAILABLE ? n : null;
+  };
 
   return (
     <div className="groups-view">
-      {groups.map((g) => {
+      {groups.map((g, gi) => {
         const standings = groupStandings(g);
         return (
           <div key={g.id} className="group-card">
-            <h4>Grup {g.id.toUpperCase()}</h4>
+            <h4>{field === "groupsR2" ? `Nivell ${gi + 1}` : `Grup ${String.fromCharCode(65 + gi)}`}</h4>
             <table className="standings-table">
               <tbody>
                 {standings.map((row, i) => (
@@ -1048,35 +1063,51 @@ function GroupsView({ jornada, field, players, admin, onSaveResult, onNextStep, 
                   match={m}
                   p1={playerById(m.p1)}
                   p2={playerById(m.p2)}
-                  canEdit={canEdit}
+                  canEdit={staff || mine(m)}
+                  canFix={staff}
+                  mine={mine(m)}
+                  table={m.round ? tableOf(gi, m) : null}
+                  confirmEntry={!staff}
                   onSave={(s1, s2) => onSaveResult(field, g.id, m.id, s1, s2)}
+                  onReset={() => onSaveResult(field, g.id, m.id, null, null)}
                 />
               ))}
             </ul>
           </div>
         );
       })}
-      {canEdit && allComplete && onNextStep && (
+      {staff && allComplete && onNextStep && (
         <button onClick={onNextStep}>{nextStepLabel}</button>
       )}
-      {canEdit && allComplete && onCloseNoBrackets && (
+      {staff && allComplete && onCloseNoBrackets && (
         <button onClick={onCloseNoBrackets}>{t("close_no_brackets")}</button>
       )}
     </div>
   );
 }
 
-function SwissView({ jornada, players, admin, onSaveResult, onClose }) {
+function SwissView({ jornada, players, admin, player, onSaveResult, onClose }) {
   const { t } = useLang();
   const rounds = jornada.swissRounds || [];
   const playerById = (id) => players.find((p) => p.id === id);
-  const canEdit = admin?.type === "master" || admin?.type === "venue" || admin?.type === "referee";
+  const staff = admin?.type === "master" || admin?.type === "venue" || admin?.type === "referee";
+  const mine = (m) => !!player && (m.p1 === player.id || m.p2 === player.id);
   const last = rounds[rounds.length - 1];
   const lastComplete = last ? last.matches.every((m) => m.done || m.bye) : false;
 
   const nextRound = async () => {
     const ratings = {};
     players.forEach((p) => (ratings[p.id] = p.elo || ELO_START));
+    // pairing score: wins in this jornada first, ELO as tie-break
+    const winsIn = {};
+    rounds.forEach((r) => r.matches.forEach((m) => {
+      if (m.bye && m.p1) winsIn[m.p1] = (winsIn[m.p1] || 0) + 1;
+      else if (m.done && m.s1 != null && m.s2 != null && m.s1 !== m.s2) {
+        const w = m.s1 > m.s2 ? m.p1 : m.p2;
+        winsIn[w] = (winsIn[w] || 0) + 1;
+      }
+    }));
+    Object.keys(ratings).forEach((id) => { ratings[id] = (winsIn[id] || 0) * 100000 + ratings[id]; });
     const ids = jornada.participants.map((p) => p.playerId);
     const played = rounds.flatMap((r) => r.matches.map((m) => [m.p1, m.p2].sort().join("-")));
     const matches = generateSwissRound(ids, ratings, played);
@@ -1098,19 +1129,18 @@ function SwissView({ jornada, players, admin, onSaveResult, onClose }) {
                 match={m}
                 p1={playerById(m.p1)}
                 p2={playerById(m.p2)}
-                canEdit={canEdit}
-                onSave={(s1, s2) =>
-                  onSaveResult("swissRounds", null, m.id, s1, s2) /* handled specially below */
-                }
-                swissRound={r.round}
-                jornadaId={jornada.id}
-                allRounds={rounds}
+                canEdit={staff || mine(m)}
+                canFix={staff}
+                mine={mine(m)}
+                confirmEntry={!staff}
+                onSave={(s1, s2) => onSaveResult("swissRounds", null, m.id, s1, s2)}
+                onReset={() => onSaveResult("swissRounds", null, m.id, null, null)}
               />
             ))}
           </ul>
         </div>
       ))}
-      {canEdit && lastComplete && (
+      {staff && lastComplete && (
         <>
           <button onClick={nextRound}>{t("next_round")}</button>
           <button onClick={onClose}>{t("close_jornada")}</button>
@@ -1120,15 +1150,22 @@ function SwissView({ jornada, players, admin, onSaveResult, onClose }) {
   );
 }
 
-function BracketsView({ jornada, players, admin, onSaveResult, onClose }) {
+function BracketsView({ jornada, players, admin, player, onSaveResult, onClose }) {
   const { t } = useLang();
   const playerById = (id) => players.find((p) => p.id === id);
-  const canEdit = admin?.type === "master" || admin?.type === "venue" || admin?.type === "referee";
+  const staff = admin?.type === "master" || admin?.type === "venue" || admin?.type === "referee";
+  const mine = (m) => !!player && (m.p1 === player.id || m.p2 === player.id);
 
   const saveBracketMatch = async (bracketKey, matchId, s1, s2) => {
-    const jref = doc(db, "jornadas", jornada.id);
-    const bracket = propagateBracket(jornada[bracketKey], matchId, s1, s2);
-    await updateDoc(jref, { [bracketKey]: bracket });
+    try {
+      const jref = doc(db, "jornadas", jornada.id);
+      const bracket = propagateBracket(jornada[bracketKey], matchId, s1, s2);
+      await updateDoc(jref, { [bracketKey]: bracket });
+    } catch (e) {
+      alert(e?.message === "downstream_done"
+        ? "No es pot canviar: el partit següent ja s'ha jugat. Corregeix primer aquell."
+        : "No s'ha pogut desar el resultat.");
+    }
   };
 
   const renderBracket = (bracket, key, title) => {
@@ -1139,14 +1176,21 @@ function BracketsView({ jornada, players, admin, onSaveResult, onClose }) {
         <h4>{title}</h4>
         {rounds.map((round, ri) => (
           <div key={ri} className="bracket-round">
-            <h5>{bracketRoundName(rounds.length, ri)}</h5>
-            {round.map((m) => (
+            <h5>{bracketRoundName(rounds.length, ri, t)}</h5>
+            {round.matches.map((m) => (
               <div key={m.id} className="bracket-match">
                 <span>{m.p1 ? playerById(m.p1)?.name : m.bye ? t("bye_label") : "?"}</span>
                 <span>{m.s1 ?? ""} - {m.s2 ?? ""}</span>
                 <span>{m.p2 ? playerById(m.p2)?.name : m.bye ? t("bye_label") : "?"}</span>
-                {canEdit && m.p1 && m.p2 && !m.done && (
-                  <ResultEditor onSave={(s1, s2) => saveBracketMatch(key, m.id, s1, s2)} />
+                {m.p1 && m.p2 && !m.done && (staff || mine(m)) && (
+                  <ResultEditor
+                    names={[playerById(m.p1)?.name, playerById(m.p2)?.name]}
+                    confirmEntry={!staff}
+                    onSave={(s1, s2) => saveBracketMatch(key, m.id, s1, s2)}
+                  />
+                )}
+                {staff && m.done && !m.bye && (
+                  <button className="secondary small" onClick={() => saveBracketMatch(key, m.id, null, null)}>Corregir</button>
                 )}
               </div>
             ))}
@@ -1156,31 +1200,36 @@ function BracketsView({ jornada, players, admin, onSaveResult, onClose }) {
     );
   };
 
-  const bothDone =
-    jornada.bracketGold?.rounds?.every((r) => r.every((m) => m.done || m.bye)) &&
-    jornada.bracketSilver?.rounds?.every((r) => r.every((m) => m.done || m.bye));
+  const bracketDone = (b) => !b || b.rounds.every((r) => r.matches.every((m) => m.done || m.bye));
+  const bothDone = !!jornada.bracketGold && bracketDone(jornada.bracketGold) && bracketDone(jornada.bracketSilver);
 
   return (
     <div className="brackets-view">
       {renderBracket(jornada.bracketGold, "bracketGold", t("quadre_or"))}
       {renderBracket(jornada.bracketSilver, "bracketSilver", t("quadre_plata"))}
-      {canEdit && bothDone && <button onClick={onClose}>{t("close_jornada")}</button>}
+      {staff && bothDone && <button onClick={onClose}>{t("close_jornada")}</button>}
     </div>
   );
 }
 
-function MatchRow({ match, p1, p2, canEdit, onSave }) {
+function MatchRow({ match, p1, p2, canEdit, canFix, mine, table, confirmEntry, onSave, onReset }) {
   const { t } = useLang();
   if (match.bye) {
     return <li className="match-row bye">{p1?.name || p2?.name} — {t("bye_win")}</li>;
   }
   return (
-    <li className="match-row">
+    <li className={"match-row" + (mine ? " mine" : "")}>
+      {match.round && <span className="rnd">R{match.round}{table ? ` · M${table}` : ""}</span>}
       <span>{p1?.name}</span>
       {match.done ? (
-        <span className="result">{match.s1} - {match.s2}</span>
+        <span className="result">
+          {match.s1} - {match.s2}
+          {canFix && onReset && (
+            <button className="secondary small" onClick={onReset}>Corregir</button>
+          )}
+        </span>
       ) : canEdit ? (
-        <ResultEditor onSave={onSave} />
+        <ResultEditor names={[p1?.name, p2?.name]} confirmEntry={confirmEntry} onSave={onSave} />
       ) : (
         <span className="result pending">vs</span>
       )}
@@ -1189,22 +1238,24 @@ function MatchRow({ match, p1, p2, canEdit, onSave }) {
   );
 }
 
-function ResultEditor({ onSave }) {
+function ResultEditor({ onSave, names, confirmEntry }) {
   const { t } = useLang();
   const [s1, setS1] = useState("");
   const [s2, setS2] = useState("");
   return (
     <span className="result-editor">
-      <input type="number" min="0" value={s1} onChange={(e) => setS1(e.target.value)} />
+      <input type="number" inputMode="numeric" min="0" value={s1} onChange={(e) => setS1(e.target.value)} />
       -
-      <input type="number" min="0" value={s2} onChange={(e) => setS2(e.target.value)} />
+      <input type="number" inputMode="numeric" min="0" value={s2} onChange={(e) => setS2(e.target.value)} />
       <button
         onClick={() => {
-          if (s1 === "" || s2 === "") {
+          const n1 = Number(s1), n2 = Number(s2);
+          if (s1 === "" || s2 === "" || !Number.isInteger(n1) || !Number.isInteger(n2) || n1 < 0 || n2 < 0 || n1 === n2) {
             alert(t("invalid_result"));
             return;
           }
-          onSave(Number(s1), Number(s2));
+          if (confirmEntry && !window.confirm(`${names?.[0] || ""} ${n1} - ${n2} ${names?.[1] || ""}\n\nConfirmes el resultat?`)) return;
+          onSave(n1, n2);
         }}
       >
         {t("save")}
