@@ -173,3 +173,7 @@
 
 .tourney-opt{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;margin:6px 0}
 .tourney-opt select{padding:8px;border-radius:8px;border:1px solid #3a3442;background:#26212b;color:var(--text);font-size:14px}
+
+.perfil-avatar-empty{display:flex;align-items:center;justify-content:center;background:#3a3442;color:var(--yellow);font-weight:800;font-size:32px}
+.photo-btn{margin:6px auto}
+.perfil-avatar{cursor:pointer}

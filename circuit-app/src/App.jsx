@@ -1375,8 +1375,53 @@ function PodiumView({ jornada, players }) {
 // ---------------------------------------------------------------------------
 // Perfil tab
 // ---------------------------------------------------------------------------
+// Downscale a photo to max 512px (JPEG) so it stays small in Firestore/Storage.
+function resizeImage(file, max = 512) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("bad image")); };
+    img.src = url;
+  });
+}
+
 function PerfilTab({ player, players, onLogout, onUpdate }) {
   const { t } = useLang();
+  const photoInput = useRef(null);
+  const [savingPhoto, setSavingPhoto] = useState(false);
+
+  const changePhoto = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!player.consent && !window.confirm(t("login_consent") + "\n\n" + t("login_consent_minor"))) return;
+    setSavingPhoto(true);
+    try {
+      const dataUrl = await resizeImage(file);
+      let selfieUrl = dataUrl;
+      try {
+        const sref = ref(storage, `selfies/${uid()}.jpg`);
+        await uploadString(sref, dataUrl, "data_url");
+        selfieUrl = await getDownloadURL(sref);
+      } catch {
+        // keep the (small) data URL inline if storage upload fails
+      }
+      await updateDoc(doc(db, "players", player.id), { selfieUrl, consent: true });
+      onUpdate({ ...player, selfieUrl, consent: true });
+    } catch {
+      alert(t("err_photo"));
+    }
+    setSavingPhoto(false);
+  };
   const [editingName, setEditingName] = useState(false);
   const [name, setName] = useState(player.name);
   const [club, setClub] = useState(player.club || "");
@@ -1409,9 +1454,15 @@ function PerfilTab({ player, players, onLogout, onUpdate }) {
   return (
     <div className="perfil-tab">
       <div className="perfil-header">
-        {(player.selfieUrl || player.photoURL) && (
-          <img src={player.selfieUrl || player.photoURL} alt={player.name} className="perfil-avatar" />
+        {(player.selfieUrl || player.photoURL) ? (
+          <img src={player.selfieUrl || player.photoURL} alt={player.name} className="perfil-avatar" onClick={() => photoInput.current?.click()} />
+        ) : (
+          <div className="perfil-avatar perfil-avatar-empty" onClick={() => photoInput.current?.click()}>{(player.name || "?").slice(0, 1).toUpperCase()}</div>
         )}
+        <input ref={photoInput} type="file" accept="image/*" style={{ display: "none" }} onChange={changePhoto} />
+        <button className="secondary small photo-btn" disabled={savingPhoto} onClick={() => photoInput.current?.click()}>
+          📷 {savingPhoto ? t("photo_saving") : (player.selfieUrl || player.photoURL) ? t("photo_change") : t("photo_add")}
+        </button>
         {editingName ? (
           <span>
             <input value={name} onChange={(e) => setName(e.target.value)} />
