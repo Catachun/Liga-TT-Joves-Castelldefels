@@ -497,6 +497,7 @@ function RankingTab({ players, jornadas = [] }) {
   const [filterStyle, setFilterStyle] = useState("");
   const [showCalc, setShowCalc] = useState(false);
   const [calcRivalId, setCalcRivalId] = useState("");
+  const [viewId, setViewId] = useState(null);
 
   const active = livePlayers.filter((p) => p.active !== false).sort((a, b) => (b.elo || ELO_START) - (a.elo || ELO_START));
   const clubs = Array.from(new Set(players.map((p) => p.club).filter(Boolean)));
@@ -572,7 +573,7 @@ function RankingTab({ players, jornadas = [] }) {
           {filtered.map((p, i) => {
             const div = divisionFor(p.elo || ELO_START);
             return (
-              <li key={p.id} className="ranking-row">
+              <li key={p.id} className="ranking-row" style={{ cursor: "pointer" }} onClick={() => setViewId(p.id)}>
                 <span className="pos">{i + 1}</span>
                 {(p.selfieUrl || p.photoURL) && <img src={p.selfieUrl || p.photoURL} alt={p.name} className="avatar" />}
                 <span className="name">{p.name}{p.nickname ? <span className="nick"> "{p.nickname}"</span> : null}</span>
@@ -583,6 +584,70 @@ function RankingTab({ players, jornadas = [] }) {
           })}
         </ol>
       )}
+
+      {viewId && (() => {
+        const vp = players.find((x) => x.id === viewId);
+        if (!vp) return null;
+        const lp = livePlayers.find((x) => x.id === viewId) || vp;
+        const vdiv = divisionFor(lp.elo || ELO_START);
+        const vb = vp.earnedBadges || [];
+        const hist = (vp.matchHistory || []).slice().reverse();
+        const nameOf = (id) => players.find((x) => x.id === id)?.name || "?";
+        return (
+          <div className="modal-overlay" onClick={() => setViewId(null)}>
+            <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+              <button className="ghost modal-close" onClick={() => setViewId(null)}>✕ {t("calc_close")}</button>
+              <div className="perfil-header" style={{ textAlign: "center" }}>
+                {(vp.selfieUrl || vp.photoURL) ? <img src={vp.selfieUrl || vp.photoURL} alt={vp.name} className="perfil-avatar" /> : <div className="perfil-avatar perfil-avatar-empty">{(vp.name || "?").slice(0, 1).toUpperCase()}</div>}
+                <h2>{vp.name}{vp.nickname ? <span className="nick"> "{vp.nickname}"</span> : null}</h2>
+                <p className="division-badge">{vdiv.icon} {t(`division_${vdiv.key}`)}</p>
+                <p className="elo-line">{Math.round(lp.elo || ELO_START)} ELO · {t("peak_elo")}: {Math.round(peakEloFor(lp))}</p>
+              </div>
+              <div className="stats-row">
+                <div><b>{vp.played || 0}</b> Partits</div>
+                <div><b>{vp.wins || 0}</b> {t("victories")}</div>
+                <div><b>{vp.losses || 0}</b> {t("defeats")}</div>
+              </div>
+              <div className="badges-box">
+                <h4>{t("badges_title")} ({vb.length})</h4>
+                {vb.length === 0 ? <p className="empty">Encara no té insígnies.</p> : (
+                  <div className="badges-grid">
+                    {vb.filter((k) => BADGE_ICONS[k]).map((key) => (
+                      <div key={key} className="badge earned" title={t(`badge_${badgeI18nKey(key)}_desc`)}>
+                        <span className="badge-icon">{BADGE_ICONS[key]}</span>
+                        <span className="badge-name">{t(`badge_${badgeI18nKey(key)}_name`)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="history-box">
+                <h4>{t("history_title")}</h4>
+                {hist.length === 0 ? <p className="empty">{t("history_empty")}</p> : (
+                  <ul className="history-list">
+                    {hist.map((m, i) => {
+                      const d = Math.round((m.eloAfter ?? 0) - (m.eloBefore ?? 0));
+                      return (
+                        <li key={i} className={m.result === "win" ? "win" : "loss"}>
+                          <span className="hres">{m.result === "win" ? "V" : "D"}</span>
+                          <span className="hmid">
+                            <div className="hopp">{nameOf(m.opponentId)}</div>
+                            {(m.sets || []).length > 0 && <small className="muted">{m.sets.map((x) => `${x.a}-${x.b}`).join(", ")}</small>}
+                          </span>
+                          <span className="hright">
+                            <div className="hscore">{m.s1}-{m.s2}</div>
+                            {m.eloAfter != null && <div className={"helo " + (d >= 0 ? "up" : "down")}>{d >= 0 ? "+" : ""}{d}</div>}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {showCalc && (
         <div className="modal-overlay" onClick={() => setShowCalc(false)}>
