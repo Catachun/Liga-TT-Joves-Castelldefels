@@ -478,15 +478,27 @@ function LoginScreen({ onLogin, jornadas }) {
 // ---------------------------------------------------------------------------
 // Ranking tab
 // ---------------------------------------------------------------------------
-function RankingTab({ players }) {
+function RankingTab({ players, jornadas = [] }) {
   const { t } = useLang();
+  // live (provisional) ranking: replay the matches of the jornada in progress on top of the official ELO
+  const liveJ = jornadas.find((j) => !j.isTest && !["inscripcio", "tancada"].includes(j.status));
+  let liveInfo = null;
+  if (liveJ) {
+    try {
+      const { updates } = applyJornadaResults(liveJ, players);
+      if (Object.keys(updates).length) liveInfo = updates;
+    } catch (e) { liveInfo = null; }
+  }
+  const livePlayers = liveInfo
+    ? players.map((p) => (liveInfo[p.id] ? { ...p, delta: Math.round(liveInfo[p.id].elo - (p.elo ?? ELO_START)), elo: liveInfo[p.id].elo } : p))
+    : players;
   const [filterClub, setFilterClub] = useState("");
   const [filterHand, setFilterHand] = useState("");
   const [filterStyle, setFilterStyle] = useState("");
   const [showCalc, setShowCalc] = useState(false);
   const [calcRivalId, setCalcRivalId] = useState("");
 
-  const active = players.filter((p) => p.active !== false).sort((a, b) => (b.elo || ELO_START) - (a.elo || ELO_START));
+  const active = livePlayers.filter((p) => p.active !== false).sort((a, b) => (b.elo || ELO_START) - (a.elo || ELO_START));
   const clubs = Array.from(new Set(players.map((p) => p.club).filter(Boolean)));
 
   const filtered = active.filter((p) => {
@@ -508,6 +520,7 @@ function RankingTab({ players }) {
         <h2>{t("ranking_title")}</h2>
         <button onClick={() => setShowCalc(true)}>{t("calc_btn")}</button>
       </div>
+      {liveInfo && <p className="hint small">🔴 En directe: ranking provisional amb els resultats de «{liveJ.name}». Serà oficial quan es tanqui la jornada.</p>}
 
       <div className="division-ladder">
         <h3>{t("ranking_ladder_title")}</h3>
@@ -564,7 +577,7 @@ function RankingTab({ players }) {
                 {(p.selfieUrl || p.photoURL) && <img src={p.selfieUrl || p.photoURL} alt={p.name} className="avatar" />}
                 <span className="name">{p.name}{p.nickname ? <span className="nick"> "{p.nickname}"</span> : null}</span>
                 <span className="division">{div.icon}</span>
-                <span className="elo">{Math.round(p.elo || ELO_START)}</span>
+                <span className="elo">{Math.round(p.elo || ELO_START)}{liveInfo && p.delta ? <small style={{ color: p.delta > 0 ? "#1e8e3e" : "#c0392b", marginLeft: 4 }}>{p.delta > 0 ? "▲" : "▼"}{Math.abs(p.delta)}</small> : null}</span>
               </li>
             );
           })}
@@ -2039,7 +2052,7 @@ function AppShell() {
         {liveePlayer && tab !== "admin" && (
           <NextJornadaBanner player={liveePlayer} players={players} jornadas={jornadas} onOpen={() => setTab("jornades")} />
         )}
-        {tab === "ranking" && <RankingTab players={players} />}
+        {tab === "ranking" && <RankingTab players={players} jornadas={jornadas} />}
         {tab === "jornades" && (
           <JornadesTab
             player={liveePlayer}
