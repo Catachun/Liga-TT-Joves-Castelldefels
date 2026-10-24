@@ -330,6 +330,7 @@ export function applyJornadaResults(jornada, players) {
         wins: p.wins || 0, losses: p.losses || 0,
         matchHistory: [...(p.matchHistory || [])], opponents: [...(p.opponents || [])],
         earnedBadges: [...(p.earnedBadges || [])], startElo: p.elo ?? ELO_START, touched: false,
+        refereed: p.refereed || 0, podiums: p.podiums || 0, goldTitles: p.goldTitles || 0, silverTitles: p.silverTitles || 0, founder: !!p.founder,
       };
     }
     return state[id];
@@ -339,20 +340,29 @@ export function applyJornadaResults(jornada, players) {
     const a = get(m.p1), b = get(m.p2);
     const aWins = m.s1 > m.s2;
     const { newA, newB } = calcELO(a, b, aWins ? 1 : 0);
-    const push = (me, opp, oppId, own, theirs, win, before, after) => {
+    const push = (me, oppId, own, theirs, win, before, after, oppBefore, sets) => {
       me.touched = true;
       me.played++; if (win) me.wins++; else me.losses++;
-      me.matchHistory.push({ jornadaId: jornada.id, date: jornada.date || null, opponentId: oppId, result: win ? "win" : "loss", s1: own, s2: theirs, eloBefore: before, eloAfter: after });
+      me.matchHistory.push({ jornadaId: jornada.id, date: jornada.date || null, opponentId: oppId, result: win ? "win" : "loss", s1: own, s2: theirs, eloBefore: before, eloAfter: after, oppEloBefore: oppBefore, sets });
       if (!me.opponents.includes(oppId)) me.opponents.push(oppId);
     };
     const aBefore = a.elo, bBefore = b.elo;
-    push(a, b, m.p2, m.s1, m.s2, aWins, aBefore, newA);
-    push(b, a, m.p1, m.s2, m.s1, !aWins, bBefore, newB);
+    const setsA = (m.sets || []).map((x) => ({ a: x.a, b: x.b }));
+    const setsB = (m.sets || []).map((x) => ({ a: x.b, b: x.a }));
+    push(a, m.p2, m.s1, m.s2, aWins, aBefore, newA, bBefore, setsA);
+    push(b, m.p1, m.s2, m.s1, !aWins, bBefore, newB, aBefore, setsB);
+    if (m.refereeId) get(m.refereeId).refereed++;
     a.elo = newA; b.elo = newB;
     a.peakElo = Math.max(a.peakElo, a.elo); b.peakElo = Math.max(b.peakElo, b.elo);
   });
   const updates = {};
   let mvp = null, mvpGain = 0;
+  if (jornada.date === FIRST_JORNADA_DATE) Object.values(state).forEach((st) => { if (st.touched) st.founder = true; });
+  const pod = computePodium(jornada);
+  const silverFinal = jornada.bracketSilver?.rounds?.[jornada.bracketSilver.rounds.length - 1]?.matches?.[0];
+  [pod?.gold?.first, pod?.gold?.second, pod?.gold?.third].filter(Boolean).forEach((id) => { if (state[id]) state[id].podiums++; });
+  if (pod?.gold?.first && state[pod.gold.first]) state[pod.gold.first].goldTitles++;
+  if (silverFinal?.winner && state[silverFinal.winner]) state[silverFinal.winner].silverTitles++;
   Object.entries(state).forEach(([id, st]) => {
     if (!st.touched) return;
     const earned = computeBadges(st);
@@ -364,6 +374,7 @@ export function applyJornadaResults(jornada, players) {
     updates[id] = {
       elo: st.elo, peakElo: st.peakElo, played: st.played, wins: st.wins, losses: st.losses,
       matchHistory: st.matchHistory, opponents: st.opponents, earnedBadges: earned,
+      refereed: st.refereed, podiums: st.podiums, goldTitles: st.goldTitles, silverTitles: st.silverTitles, founder: st.founder,
     };
   });
   return { updates, mvp, mvpGain };
@@ -404,11 +415,19 @@ export function computePodium(jornada) {
 }
 
 // ---------- Badges ----------
+export const FIRST_JORNADA_DATE = "2026-10-24"; // Fundador badge: first-ever TT Circuit session
+
 export const BADGE_ICONS = {
   first_win: "🏓", streak3: "🔥", streak5: "🌋", streak10: "☄️",
   giant: "⚔️", veteran: "🎖️", legend50: "🏅", six_hundred: "📈",
   elite700: "💎", clean_sweep: "🧹", cleansweep10: "✨", social10: "🤝",
   invicte: "🛡️", anotador: "🎯", superacio: "💪", revenja: "🔁",
+  founder: "🌱",
+  arena_plata: "🥈", arena_or: "🥇", arena_plati: "💠", arena_diamant: "💎", arena_llegenda: "👑",
+  chest_1: "📦", chest_3: "🎁", chest_5: "🏺", chest_10: "🔮",
+  three_crowns: "🔱", comeback: "🔄", suddendeath: "⚡", bagel: "🥯",
+  perfect_jornada: "🌟", rocket: "🚀", marathon: "🏃", referee: "⚖️", rival: "🆚",
+  podium: "🏆", champ_gold: "🥇", champ_silver: "🥈",
 };
 
 export const BADGE_POINTS = {
@@ -416,37 +435,105 @@ export const BADGE_POINTS = {
   giant: 10, veteran: 10, legend50: 30, six_hundred: 10,
   elite700: 25, clean_sweep: 10, cleansweep10: 25, social10: 10,
   invicte: 15, anotador: 15, superacio: 15, revenja: 10,
+  founder: 15,
+  arena_plata: 5, arena_or: 5, arena_plati: 10, arena_diamant: 10, arena_llegenda: 20,
+  chest_1: 5, chest_3: 10, chest_5: 15, chest_10: 25,
+  three_crowns: 5, comeback: 10, suddendeath: 5, bagel: 5,
+  perfect_jornada: 15, rocket: 10, marathon: 10, referee: 10, rival: 5,
+  podium: 10, champ_gold: 25, champ_silver: 15,
 };
 
 export function computeBadges(player) {
   const history = player.matchHistory || [];
   const badges = new Set(player.earnedBadges || []);
   const wins = player.wins || 0;
+  const losses = player.losses || 0;
   const played = player.played || 0;
   const elo = player.elo ?? ELO_START;
+  const peak = Math.max(player.peakElo || ELO_START, elo);
 
   if (wins >= 1) badges.add("first_win");
 
-  let streak = 0, maxStreak = 0;
+  // streaks (wins in a row) and clean-sweep streaks (wins in a row without losing a set)
+  let streak = 0, maxStreak = 0, sweep = 0, maxSweep = 0;
   history.forEach((m) => {
-    if (m.result === "win") { streak++; maxStreak = Math.max(maxStreak, streak); }
-    else streak = 0;
+    if (m.result === "win") {
+      streak++; maxStreak = Math.max(maxStreak, streak);
+      if ((m.s2 || 0) === 0) { sweep++; maxSweep = Math.max(maxSweep, sweep); } else sweep = 0;
+    } else { streak = 0; sweep = 0; }
   });
   if (maxStreak >= 3) badges.add("streak3");
   if (maxStreak >= 5) badges.add("streak5");
   if (maxStreak >= 10) badges.add("streak10");
+  if (maxSweep >= 5) badges.add("clean_sweep");
+  if (maxSweep >= 10) badges.add("cleansweep10");
 
   if (played >= 20) badges.add("veteran");
-  if (played >= 200) badges.add("legend50");
+  if (played >= 50) badges.add("legend50");
   if (elo >= 600) badges.add("six_hundred");
   if (elo >= 700) badges.add("elite700");
 
   const rivals = new Set(history.map((m) => m.opponentId).filter(Boolean));
   if (rivals.size >= 10) badges.add("social10");
 
-  const cleanSweeps = history.filter((m) => m.result === "win" && (m.s2 || 0) === 0).length;
-  if (cleanSweeps >= 5) badges.add("clean_sweep");
-  if (cleanSweeps >= 10) badges.add("cleansweep10");
+  // season-style badges
+  if (losses === 0 && played >= 8) badges.add("invicte");
+  const setsWon = history.reduce((n, m) => n + (m.s1 || 0), 0);
+  if (setsWon >= 50) badges.add("anotador");
+  const lowest = history.reduce((lo, m) => Math.min(lo, m.eloBefore ?? lo, m.eloAfter ?? lo), ELO_START);
+  if (elo - lowest >= 120) badges.add("superacio");
+
+  // rivals: beat the same opponent 3 times / played the same opponent 3 times
+  const beaten = {}, met = {};
+  history.forEach((m) => {
+    if (!m.opponentId) return;
+    met[m.opponentId] = (met[m.opponentId] || 0) + 1;
+    if (m.result === "win") beaten[m.opponentId] = (beaten[m.opponentId] || 0) + 1;
+  });
+  if (Object.values(beaten).some((n) => n >= 3)) badges.add("revenja");
+  if (Object.values(met).some((n) => n >= 3)) badges.add("rival");
+
+  // giant killer: beat someone rated 100+ ELO above you at that moment
+  if (history.some((m) => m.result === "win" && m.oppEloBefore != null && m.eloBefore != null && m.oppEloBefore - m.eloBefore >= 100)) badges.add("giant");
+
+  // match-detail badges (need per-set points, stored from the first jornada on)
+  history.forEach((m) => {
+    const sets = m.sets || [];
+    if (m.result === "win" && (m.s2 || 0) === 0 && (m.s1 || 0) >= 2) badges.add("three_crowns");
+    if (sets.some((x) => x.a === 11 && x.b === 0)) badges.add("bagel");
+    if (sets.some((x) => x.a >= 12 && x.a > x.b)) badges.add("suddendeath");
+    if (m.result === "win" && sets.length) {
+      let own = 0, opp = 0, deficit = 0;
+      sets.forEach((x) => { if (x.a > x.b) own++; else opp++; deficit = Math.max(deficit, opp - own); });
+      if (deficit >= 2 || (sets.length === 3 && sets[0].a < sets[0].b)) badges.add("comeback");
+    }
+  });
+
+  // arenas = divisions reached (peak ELO)
+  [["arena_plata", 680], ["arena_or", 860], ["arena_plati", 1040], ["arena_diamant", 1170], ["arena_llegenda", 1300]]
+    .forEach(([k, min]) => { if (peak >= min) badges.add(k); });
+
+  // attendance chests, perfect jornada, rocket, marathon
+  const byJornada = {};
+  history.forEach((m) => { if (m.jornadaId) (byJornada[m.jornadaId] ||= []).push(m); });
+  const jornadas = Object.values(byJornada);
+  if (jornadas.length >= 1) badges.add("chest_1");
+  if (jornadas.length >= 3) badges.add("chest_3");
+  if (jornadas.length >= 5) badges.add("chest_5");
+  if (jornadas.length >= 10) badges.add("chest_10");
+  jornadas.forEach((ms) => {
+    if (ms.length >= 4 && ms.every((m) => m.result === "win")) badges.add("perfect_jornada");
+    if (ms.length >= 10) badges.add("marathon");
+    const first = ms[0], last = ms[ms.length - 1];
+    if (first.eloBefore != null && last.eloAfter != null && last.eloAfter - first.eloBefore >= 50) badges.add("rocket");
+  });
+
+  // organisation-granted facts
+  if (player.founder) badges.add("founder");
+  if ((player.refereed || 0) >= 5) badges.add("referee");
+  if ((player.podiums || 0) >= 1) badges.add("podium");
+  if ((player.goldTitles || 0) >= 1) badges.add("champ_gold");
+  if ((player.silverTitles || 0) >= 1) badges.add("champ_silver");
 
   return Array.from(badges);
 }
