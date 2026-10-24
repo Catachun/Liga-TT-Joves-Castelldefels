@@ -10,6 +10,7 @@ import {
   getDoc,
   setDoc,
   updateDoc,
+  runTransaction,
   addDoc,
   deleteDoc,
   writeBatch,
@@ -822,16 +823,21 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
   // s1 == null clears the result (admin correction).
   const saveMatchResult = async (field, groupId, matchId, s1, s2, sets) => {
     const jref = doc(db, "jornadas", jornada.id);
-    const list = [...(jornada[field] || [])];
     const patch = (m) => (m.id === matchId
       ? (s1 == null ? { ...m, s1: null, s2: null, sets: [], done: false } : { ...m, s1, s2, sets: sets || [], done: true })
       : m);
-    let gIdx = groupId == null
-      ? list.findIndex((g) => (g.matches || []).some((m) => m.id === matchId))
-      : list.findIndex((g) => g.id === groupId);
-    if (gIdx === -1) return;
-    list[gIdx] = { ...list[gIdx], matches: list[gIdx].matches.map(patch) };
-    await updateDoc(jref, { [field]: list });
+    // transaction: re-read the latest data right before writing so simultaneous results
+    // coming from several phones never overwrite each other
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(jref);
+      const list = [...((snap.data() || {})[field] || [])];
+      const gIdx = groupId == null
+        ? list.findIndex((g) => (g.matches || []).some((m) => m.id === matchId))
+        : list.findIndex((g) => g.id === groupId);
+      if (gIdx === -1) return;
+      list[gIdx] = { ...list[gIdx], matches: list[gIdx].matches.map(patch) };
+      tx.update(jref, { [field]: list });
+    });
   };
 
   const rescheduleGroups = async () => {
@@ -1219,8 +1225,11 @@ function BracketsView({ jornada, players, admin, player, bestOf, onSaveResult, o
   const saveBracketMatch = async (bracketKey, matchId, s1, s2, sets) => {
     try {
       const jref = doc(db, "jornadas", jornada.id);
-      const bracket = propagateBracket(jornada[bracketKey], matchId, s1, s2, sets);
-      await updateDoc(jref, { [bracketKey]: bracket });
+      await runTransaction(db, async (tx) => {
+        const snap = await tx.get(jref);
+        const bracket = propagateBracket((snap.data() || {})[bracketKey], matchId, s1, s2, sets);
+        tx.update(jref, { [bracketKey]: bracket });
+      });
     } catch (e) {
       alert(e?.message === "downstream_done"
         ? "No es pot canviar: el partit següent ja s'ha jugat. Corregeix primer aquell."
