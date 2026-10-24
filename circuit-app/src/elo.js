@@ -153,36 +153,55 @@ const diffs = (r) => [r.wins, r.setsWon - r.setsLost, r.pointsFor - r.pointsAgai
 
 // Table tennis tie-break: players level on wins are ranked by a mini-league among
 // themselves (wins, set difference, point difference), then by overall set / point difference.
-// Timetable for the available tables. Matches are taken round by round and placed in the earliest
-// turn where both players are free and a table is free. Each match also gets a referee: a player
-// of the same group who is not playing in that turn (spread as evenly as possible).
+// Timetable for the available tables, built turn by turn so that everybody alternates:
+// play -> rest/referee -> play. A match is only put in a turn if neither player played in the
+// previous turn (when that is impossible, the least back-to-back option is used). Each match also
+// gets a referee from its group: someone resting in that turn, who did not referee the turn before,
+// chosen so that refereeing is shared out evenly.
 export function scheduleGroups(groups, tables = 4) {
-  const slots = [];
-  const refCount = {};
   const maxRound = Math.max(0, ...groups.flatMap((g) => g.matches.map((m) => m.round || 0)));
-  for (let r = 1; r <= maxRound; r++) {
-    groups.forEach((g) => g.matches.filter((m) => m.round === r).forEach((m) => {
-      let k = 0;
-      while (true) {
-        slots[k] ||= { players: new Set(), refs: new Set(), items: [] };
-        const sl = slots[k];
-        if (sl.items.length < tables && !sl.players.has(m.p1) && !sl.players.has(m.p2)) {
-          sl.players.add(m.p1); sl.players.add(m.p2);
-          sl.items.push({ m, g });
-          m.turn = k + 1; m.table = sl.items.length;
-          break;
-        }
-        k++;
+  const remaining = [];
+  for (let r = 1; r <= maxRound; r++) groups.forEach((g) => g.matches.filter((m) => m.round === r).forEach((m) => remaining.push({ m, g })));
+  const lastPlayed = {}; // player -> last turn played
+  const lastRef = {};    // player -> last turn refereed
+  const refCount = {};
+  const allPlayers = [...new Set(groups.flatMap((g) => g.players || []))];
+  let turn = 0;
+  while (remaining.length) {
+    turn++;
+    const busy = new Set();
+    const picked = [];
+    const back = (p) => lastPlayed[p] === turn - 1;
+    const tryPass = (ok) => {
+      for (let i = 0; i < remaining.length && picked.length < tables; i++) {
+        const { m } = remaining[i];
+        if (busy.has(m.p1) || busy.has(m.p2) || !ok(m)) continue;
+        busy.add(m.p1); busy.add(m.p2);
+        picked.push(remaining.splice(i, 1)[0]);
+        i--;
       }
-    }));
+    };
+    tryPass((m) => !back(m.p1) && !back(m.p2)); // both rested last turn
+    tryPass((m) => !back(m.p1) || !back(m.p2)); // only one of them plays back-to-back
+    tryPass(() => true);
+    picked.forEach(({ m }, idx) => {
+      m.turn = turn; m.table = idx + 1;
+      lastPlayed[m.p1] = turn; lastPlayed[m.p2] = turn;
+    });
+    // referees: resting players of the same group; not the one who refereed last turn (unless forced)
+    const refsNow = new Set();
+    picked.forEach(({ m, g }) => {
+      const okP = (p) => !busy.has(p) && !refsNow.has(p);
+      const own = (g.players || []).filter(okP);
+      const all = allPlayers.filter(okP);
+      const fresh = (a) => a.filter((p) => lastRef[p] !== turn - 1 && lastPlayed[p] !== turn - 1);
+      const pool = [fresh(own), fresh(all), own.filter((p) => lastRef[p] !== turn - 1), fresh(all.length ? all : []), own, all].find((a) => a.length) || [];
+      pool.sort((x, y) => (refCount[x] || 0) - (refCount[y] || 0));
+      const pick = pool[0] || null;
+      m.refereeId = pick;
+      if (pick) { refsNow.add(pick); refCount[pick] = (refCount[pick] || 0) + 1; lastRef[pick] = turn; }
+    });
   }
-  slots.forEach((sl) => sl.items.forEach(({ m, g }) => {
-    const cands = (g.players || []).filter((p) => !sl.players.has(p) && !sl.refs.has(p));
-    cands.sort((x, y) => (refCount[x] || 0) - (refCount[y] || 0));
-    const pick = cands[0] || null;
-    m.refereeId = pick;
-    if (pick) { sl.refs.add(pick); refCount[pick] = (refCount[pick] || 0) + 1; }
-  }));
   return groups;
 }
 
