@@ -102,26 +102,61 @@ export function roundRobin(playerIds) {
   return matches;
 }
 
-export function groupStandings(group) {
+function matchPoints(m) {
+  // total points scored by p1 / p2 in a match (0/0 if the match has no per-set detail)
+  let a = 0, b = 0;
+  (m.sets || []).forEach((st) => { a += st.a; b += st.b; });
+  return [a, b];
+}
+
+function tally(ids, matches) {
   const stats = {};
-  (group.players || []).forEach((id) => {
-    stats[id] = { playerId: id, wins: 0, losses: 0, setsWon: 0, setsLost: 0 };
-  });
-  (group.matches || []).forEach((m) => {
+  ids.forEach((id) => { stats[id] = { playerId: id, wins: 0, losses: 0, setsWon: 0, setsLost: 0, pointsFor: 0, pointsAgainst: 0 }; });
+  matches.forEach((m) => {
     if (!m.done || m.bye || m.s1 == null || m.s2 == null) return;
+    if (!stats[m.p1] || !stats[m.p2]) return;
+    const [pa, pb] = matchPoints(m);
     const w = m.s1 > m.s2 ? m.p1 : m.p2;
     const l = m.s1 > m.s2 ? m.p2 : m.p1;
-    if (stats[w]) stats[w].wins++;
-    if (stats[l]) stats[l].losses++;
-    if (stats[m.p1]) { stats[m.p1].setsWon += m.s1; stats[m.p1].setsLost += m.s2; }
-    if (stats[m.p2]) { stats[m.p2].setsWon += m.s2; stats[m.p2].setsLost += m.s1; }
+    stats[w].wins++; stats[l].losses++;
+    stats[m.p1].setsWon += m.s1; stats[m.p1].setsLost += m.s2;
+    stats[m.p2].setsWon += m.s2; stats[m.p2].setsLost += m.s1;
+    stats[m.p1].pointsFor += pa; stats[m.p1].pointsAgainst += pb;
+    stats[m.p2].pointsFor += pb; stats[m.p2].pointsAgainst += pa;
   });
-  return Object.values(stats).sort((a, b) => {
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    const da = a.setsWon - a.setsLost, db = b.setsWon - b.setsLost;
-    if (db !== da) return db - da;
-    return b.setsWon - a.setsWon;
-  });
+  return stats;
+}
+
+const diffs = (r) => [r.wins, r.setsWon - r.setsLost, r.pointsFor - r.pointsAgainst];
+
+// Table tennis tie-break: players level on wins are ranked by a mini-league among
+// themselves (wins, set difference, point difference), then by overall set / point difference.
+export function groupStandings(group) {
+  const ids = group.players || [];
+  const matches = group.matches || [];
+  const overall = tally(ids, matches);
+  const rows = Object.values(overall).sort((x, y) => y.wins - x.wins);
+  const out = [];
+  let i = 0;
+  while (i < rows.length) {
+    let j = i;
+    while (j + 1 < rows.length && rows[j + 1].wins === rows[i].wins) j++;
+    const tied = rows.slice(i, j + 1);
+    if (tied.length > 1) {
+      const tiedIds = tied.map((r) => r.playerId);
+      const mini = tally(tiedIds, matches.filter((m) => tiedIds.includes(m.p1) && tiedIds.includes(m.p2)));
+      tied.sort((x, y) => {
+        const mx = diffs(mini[x.playerId]), my = diffs(mini[y.playerId]);
+        for (let k = 0; k < 3; k++) if (my[k] !== mx[k]) return my[k] - mx[k];
+        const ox = diffs(x), oy = diffs(y);
+        for (let k = 1; k < 3; k++) if (oy[k] !== ox[k]) return oy[k] - ox[k];
+        return y.setsWon - x.setsWon;
+      });
+    }
+    out.push(...tied);
+    i = j + 1;
+  }
+  return out;
 }
 
 export function groupComplete(group) {
@@ -182,14 +217,14 @@ function fillBracket(bracket) {
 
 // Set (or clear, with s1 == null) the result of one match and propagate winners.
 // Throws Error("downstream_done") if a later match depends on a result that would change.
-export function propagateBracket(bracket, matchId, s1, s2) {
+export function propagateBracket(bracket, matchId, s1, s2, sets) {
   const rounds = bracket.rounds.map((r) => ({ ...r, matches: r.matches.map((m) => ({ ...m })) }));
   let found = false;
   rounds.forEach((r) => r.matches.forEach((m) => {
     if (m.id !== matchId) return;
     found = true;
-    if (s1 == null) { m.s1 = null; m.s2 = null; m.winner = null; m.done = false; }
-    else { m.s1 = s1; m.s2 = s2; m.winner = s1 > s2 ? m.p1 : m.p2; m.done = true; }
+    if (s1 == null) { m.s1 = null; m.s2 = null; m.sets = []; m.winner = null; m.done = false; }
+    else { m.s1 = s1; m.s2 = s2; m.sets = sets || []; m.winner = s1 > s2 ? m.p1 : m.p2; m.done = true; }
   }));
   if (!found) return bracket;
   const next = fillBracket({ ...bracket, rounds });

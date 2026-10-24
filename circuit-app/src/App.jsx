@@ -808,11 +808,11 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
   };
 
   // s1 == null clears the result (admin correction).
-  const saveMatchResult = async (field, groupId, matchId, s1, s2) => {
+  const saveMatchResult = async (field, groupId, matchId, s1, s2, sets) => {
     const jref = doc(db, "jornadas", jornada.id);
     const list = [...(jornada[field] || [])];
     const patch = (m) => (m.id === matchId
-      ? (s1 == null ? { ...m, s1: null, s2: null, done: false } : { ...m, s1, s2, done: true })
+      ? (s1 == null ? { ...m, s1: null, s2: null, sets: [], done: false } : { ...m, s1, s2, sets: sets || [], done: true })
       : m);
     let gIdx = groupId == null
       ? list.findIndex((g) => (g.matches || []).some((m) => m.id === matchId))
@@ -1068,7 +1068,7 @@ function GroupsView({ jornada, field, players, admin, player, onSaveResult, onNe
                   mine={mine(m)}
                   table={m.round ? tableOf(gi, m) : null}
                   confirmEntry={!staff}
-                  onSave={(s1, s2) => onSaveResult(field, g.id, m.id, s1, s2)}
+                  onSave={(s1, s2, sets) => onSaveResult(field, g.id, m.id, s1, s2, sets)}
                   onReset={() => onSaveResult(field, g.id, m.id, null, null)}
                 />
               ))}
@@ -1133,7 +1133,7 @@ function SwissView({ jornada, players, admin, player, onSaveResult, onClose }) {
                 canFix={staff}
                 mine={mine(m)}
                 confirmEntry={!staff}
-                onSave={(s1, s2) => onSaveResult("swissRounds", null, m.id, s1, s2)}
+                onSave={(s1, s2, sets) => onSaveResult("swissRounds", null, m.id, s1, s2, sets)}
                 onReset={() => onSaveResult("swissRounds", null, m.id, null, null)}
               />
             ))}
@@ -1156,10 +1156,10 @@ function BracketsView({ jornada, players, admin, player, onSaveResult, onClose }
   const staff = admin?.type === "master" || admin?.type === "venue" || admin?.type === "referee";
   const mine = (m) => !!player && (m.p1 === player.id || m.p2 === player.id);
 
-  const saveBracketMatch = async (bracketKey, matchId, s1, s2) => {
+  const saveBracketMatch = async (bracketKey, matchId, s1, s2, sets) => {
     try {
       const jref = doc(db, "jornadas", jornada.id);
-      const bracket = propagateBracket(jornada[bracketKey], matchId, s1, s2);
+      const bracket = propagateBracket(jornada[bracketKey], matchId, s1, s2, sets);
       await updateDoc(jref, { [bracketKey]: bracket });
     } catch (e) {
       alert(e?.message === "downstream_done"
@@ -1180,13 +1180,13 @@ function BracketsView({ jornada, players, admin, player, onSaveResult, onClose }
             {round.matches.map((m) => (
               <div key={m.id} className="bracket-match">
                 <span>{m.p1 ? playerById(m.p1)?.name : m.bye ? t("bye_label") : "?"}</span>
-                <span>{m.s1 ?? ""} - {m.s2 ?? ""}</span>
+                <span>{m.s1 ?? ""} - {m.s2 ?? ""}{(m.sets || []).length > 0 && <small className="set-detail"> ({m.sets.map((x) => `${x.a}-${x.b}`).join(", ")})</small>}</span>
                 <span>{m.p2 ? playerById(m.p2)?.name : m.bye ? t("bye_label") : "?"}</span>
                 {m.p1 && m.p2 && !m.done && (staff || mine(m)) && (
                   <ResultEditor
                     names={[playerById(m.p1)?.name, playerById(m.p2)?.name]}
                     confirmEntry={!staff}
-                    onSave={(s1, s2) => saveBracketMatch(key, m.id, s1, s2)}
+                    onSave={(s1, s2, sets) => saveBracketMatch(key, m.id, s1, s2, sets)}
                   />
                 )}
                 {staff && m.done && !m.bye && (
@@ -1217,50 +1217,87 @@ function MatchRow({ match, p1, p2, canEdit, canFix, mine, table, confirmEntry, o
   if (match.bye) {
     return <li className="match-row bye">{p1?.name || p2?.name} — {t("bye_win")}</li>;
   }
+  const editing = !match.done && canEdit;
   return (
-    <li className={"match-row" + (mine ? " mine" : "")}>
+    <li className={"match-row" + (mine ? " mine" : "") + (editing ? " editing" : "")}>
       {match.round && <span className="rnd">R{match.round}{table ? ` · M${table}` : ""}</span>}
       <span>{p1?.name}</span>
       {match.done ? (
         <span className="result">
           {match.s1} - {match.s2}
+          {(match.sets || []).length > 0 && (
+            <small className="set-detail"> ({match.sets.map((x) => `${x.a}-${x.b}`).join(", ")})</small>
+          )}
           {canFix && onReset && (
             <button className="secondary small" onClick={onReset}>Corregir</button>
           )}
         </span>
-      ) : canEdit ? (
-        <ResultEditor names={[p1?.name, p2?.name]} confirmEntry={confirmEntry} onSave={onSave} />
       ) : (
         <span className="result pending">vs</span>
       )}
       <span>{p2?.name}</span>
+      {editing && (
+        <ResultEditor names={[p1?.name, p2?.name]} confirmEntry={confirmEntry} onSave={onSave} />
+      )}
     </li>
   );
 }
 
+// Table tennis set: first to 11 with a 2-point lead (so 12-10, 13-11 ... if it goes past 10-10).
+function validSet(a, b) {
+  if (!Number.isInteger(a) || !Number.isInteger(b) || a < 0 || b < 0 || a === b) return false;
+  const hi = Math.max(a, b), lo = Math.min(a, b);
+  return hi >= 11 && (hi === 11 ? lo <= 9 : hi - lo === 2);
+}
+
+// Match = best of 5 sets. Enter the points of every set (e.g. 11-9); sets won are derived.
 function ResultEditor({ onSave, names, confirmEntry }) {
   const { t } = useLang();
-  const [s1, setS1] = useState("");
-  const [s2, setS2] = useState("");
+  const [rows, setRows] = useState(() => Array.from({ length: 5 }, () => ({ a: "", b: "" })));
+  const refs = useRef([]);
+  const num = (v) => (v === "" ? NaN : Number(v));
+  let w1 = 0, w2 = 0, shown = 0;
+  for (let i = 0; i < 5; i++) {
+    shown = i + 1;
+    const a = num(rows[i].a), b = num(rows[i].b);
+    if (!validSet(a, b)) break;
+    if (a > b) w1++; else w2++;
+    if (w1 === 3 || w2 === 3) break;
+  }
+  const over = w1 === 3 || w2 === 3;
+  const setRow = (i, k, v) => {
+    const clean = v.replace(/[^0-9]/g, "").slice(0, 2);
+    setRows((r) => r.map((x, j) => (j === i ? { ...x, [k]: clean } : x)));
+    if (clean.length === 2) {
+      const next = k === "a" ? refs.current[i * 2 + 1] : refs.current[(i + 1) * 2];
+      next?.focus();
+    }
+  };
+  const submit = () => {
+    if (!over) { alert("Introdueix els punts de cada set fins que algú guanyi 3 sets (cada set: 11 punts amb 2 de diferència)."); return; }
+    const sets = rows.slice(0, shown).map((x) => ({ a: Number(x.a), b: Number(x.b) }));
+    const detail = sets.map((x) => `${x.a}-${x.b}`).join(", ");
+    if (confirmEntry && !window.confirm(`${names?.[0] || ""} ${w1} - ${w2} ${names?.[1] || ""}\n(${detail})\n\nConfirmes el resultat?`)) return;
+    onSave(w1, w2, sets);
+  };
   return (
-    <span className="result-editor">
-      <input type="number" inputMode="numeric" min="0" value={s1} onChange={(e) => setS1(e.target.value)} />
-      -
-      <input type="number" inputMode="numeric" min="0" value={s2} onChange={(e) => setS2(e.target.value)} />
-      <button
-        onClick={() => {
-          const n1 = Number(s1), n2 = Number(s2);
-          if (s1 === "" || s2 === "" || !Number.isInteger(n1) || !Number.isInteger(n2) || n1 < 0 || n2 < 0 || n1 === n2) {
-            alert(t("invalid_result"));
-            return;
-          }
-          if (confirmEntry && !window.confirm(`${names?.[0] || ""} ${n1} - ${n2} ${names?.[1] || ""}\n\nConfirmes el resultat?`)) return;
-          onSave(n1, n2);
-        }}
-      >
-        {t("save")}
-      </button>
-    </span>
+    <div className="result-editor">
+      {rows.slice(0, shown).map((r, i) => {
+        const ok = validSet(num(r.a), num(r.b));
+        return (
+          <div key={i} className={"set-row" + (ok ? " ok" : "")}>
+            <span className="set-label">Set {i + 1}</span>
+            <input ref={(el) => (refs.current[i * 2] = el)} type="text" inputMode="numeric" pattern="[0-9]*" enterKeyHint="next" placeholder="0" value={r.a} onChange={(e) => setRow(i, "a", e.target.value)} />
+            <span>-</span>
+            <input ref={(el) => (refs.current[i * 2 + 1] = el)} type="text" inputMode="numeric" pattern="[0-9]*" enterKeyHint="next" placeholder="0" value={r.b} onChange={(e) => setRow(i, "b", e.target.value)} />
+          </div>
+        );
+      })}
+      <div className="set-footer">
+        <span className="set-total">{w1} - {w2}</span>
+        <button disabled={!over} onClick={submit}>{t("save")}</button>
+      </div>
+    </div>
   );
 }
 
