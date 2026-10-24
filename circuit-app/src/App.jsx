@@ -560,7 +560,7 @@ function RankingTab({ players }) {
               <li key={p.id} className="ranking-row">
                 <span className="pos">{i + 1}</span>
                 {(p.selfieUrl || p.photoURL) && <img src={p.selfieUrl || p.photoURL} alt={p.name} className="avatar" />}
-                <span className="name">{p.name}</span>
+                <span className="name">{p.name}{p.nickname ? <span className="nick"> "{p.nickname}"</span> : null}</span>
                 <span className="division">{div.icon}</span>
                 <span className="elo">{Math.round(p.elo || ELO_START)}</span>
               </li>
@@ -1427,14 +1427,17 @@ function PerfilTab({ player, players, onLogout, onUpdate }) {
   const [club, setClub] = useState(player.club || "");
   const [hand, setHand] = useState(player.hand || player.ma || "dreta");
   const [style, setStyle] = useState(player.style || player.estil || "allround");
+  const [nickname, setNickname] = useState(player.nickname || "");
 
   const div = divisionFor(player.elo || ELO_START);
   const badges = player.earnedBadges || [];
 
   const saveInfo = async () => {
     try {
-      await updateDoc(doc(db, "players", player.id), { club, hand, style });
-      onUpdate({ ...player, club, hand, style });
+      const nick = nickname.replace(/["“”]/g, "").trim().slice(0, 20);
+      setNickname(nick);
+      await updateDoc(doc(db, "players", player.id), { club, hand, style, nickname: nick });
+      onUpdate({ ...player, club, hand, style, nickname: nick });
     } catch {
       alert(t("err_saveinfo"));
     }
@@ -1469,7 +1472,7 @@ function PerfilTab({ player, players, onLogout, onUpdate }) {
             <button onClick={saveName}>{t("save")}</button>
           </span>
         ) : (
-          <h2 onClick={() => setEditingName(true)}>{player.name}</h2>
+          <h2 onClick={() => setEditingName(true)}>{player.name}{player.nickname ? <span className="nick"> "{player.nickname}"</span> : null}</h2>
         )}
         <p className="division-badge">{div.icon} {t(`division_${div.key}`)}</p>
         <p className="elo-line">{Math.round(player.elo || ELO_START)} ELO · {t("peak_elo")}: {Math.round(peakEloFor(player))}</p>
@@ -1494,6 +1497,8 @@ function PerfilTab({ player, players, onLogout, onUpdate }) {
 
       <div className="playerinfo-box">
         <h4>{t("playerinfo_title")}</h4>
+        <label>{t("playerinfo_nick")}</label>
+        <input value={nickname} maxLength={20} placeholder={t("playerinfo_nick_ph")} onChange={(e) => setNickname(e.target.value)} />
         <label>{t("playerinfo_club")}</label>
         <input value={club} placeholder={t("playerinfo_club_ph")} onChange={(e) => setClub(e.target.value)} />
         <label>{t("playerinfo_hand")}</label>
