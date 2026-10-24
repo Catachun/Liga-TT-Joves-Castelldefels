@@ -41,6 +41,8 @@ import {
   generateSwissRound,
   computePodium,
   applyJornadaResults,
+  recommendTournament,
+  estimateMinutes,
   BADGE_ICONS,
   BADGE_POINTS,
   computeBadges,
@@ -710,6 +712,11 @@ function JornadesTab({ player, players, jornadas, loadHistoric, admin }) {
 function JornadaDetail({ jornada, player, players, admin, onBack }) {
   const { t } = useLang();
   const [busy, setBusy] = useState(false);
+  const rec = recommendTournament((jornada.participants || []).length);
+  const [bestOfSel, setBestOfSel] = useState(null); // null = follow the recommendation
+  const [groupsSel, setGroupsSel] = useState(null);
+  const bestOfChosen = bestOfSel ?? rec.bestOf;
+  const groupsChosen = groupsSel ?? rec.numGroups;
 
   const participants = jornada.participants || [];
   const waitlist = jornada.waitlist || [];
@@ -778,6 +785,7 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
   };
 
   const startTournament = async (format) => {
+    if (!window.confirm(`Format: ${format === "suis" ? "Sistema suís" : format === "nivellats" ? "Grups nivellats" : `${groupsChosen} grup(s) + Quadre Or/Plata`}\nPartits al millor de ${bestOfChosen} sets\n\nConfirmes? (després no es pot tornar enrere)`)) return;
     setBusy(true);
     const jref = doc(db, "jornadas", jornada.id);
     const ids = participants.map((p) => p.playerId);
@@ -785,7 +793,7 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
     ids.forEach((id) => (ratings[id] = playerById(id)?.elo || ELO_START));
 
     if (format === "grups" || format === "nivellats") {
-      const groups = makeGroups(ids, ratings);
+      const groups = makeGroups(ids, ratings, groupsChosen);
       const groupsData = groups.map((g, i) => ({
         id: `g${i}`,
         players: g,
@@ -793,6 +801,7 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
       }));
       await updateDoc(jref, {
         format,
+        bestOf: bestOfChosen,
         status: format === "nivellats" ? "grups_r1" : "grups",
         groups: groupsData,
       });
@@ -800,6 +809,7 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
       const round1 = generateSwissRound(ids, ratings, []);
       await updateDoc(jref, {
         format: "suis",
+        bestOf: bestOfChosen,
         status: "suis",
         swissRounds: [{ round: 1, matches: round1 }],
       });
@@ -917,6 +927,19 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
         {jornada.date} · {venue.name} · {t("schedule_opening")}: {schedule.opening} · {t("schedule_start")}: {schedule.start}
       </p>
       <p className="jornada-status-label">{t(`status_${jornada.status}`) || jornada.status}</p>
+      {jornada.bestOf && jornada.status !== "inscripcio" && (
+        <p className="hint small">
+          Partits al millor de {jornada.bestOf} sets
+          {(admin?.type === "master" || admin?.type === "venue") && jornada.status !== "tancada" && (
+            <>
+              {" · "}
+              <button className="secondary small" onClick={() => updateDoc(doc(db, "jornadas", jornada.id), { bestOf: jornada.bestOf === 5 ? 3 : 5 })}>
+                Canviar a {jornada.bestOf === 5 ? 3 : 5} sets
+              </button>
+            </>
+          )}
+        </p>
+      )}
 
       {jornada.status === "inscripcio" && (
         <div className="registration-box">
@@ -970,10 +993,31 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
             </div>
           )}
 
-          {admin?.type === "master" && participants.length >= 3 && (
+          {(admin?.type === "master" || admin?.type === "venue") && participants.length >= 3 && (
             <div className="start-tournament-box">
               <h4>{t("start_tournament_title")}</h4>
               <p>{t("choose_format", { n: participants.length })}</p>
+              <p className="hint">
+                Recomanat per a {participants.length} jugadors: {rec.numGroups} grup{rec.numGroups > 1 ? "s" : ""} + Quadre Or/Plata, partits al millor de {rec.bestOf} sets.
+              </p>
+              <label className="tourney-opt">
+                Partits al millor de
+                <select value={bestOfChosen} onChange={(e) => setBestOfSel(Number(e.target.value))}>
+                  <option value={3}>3 sets (més ràpid)</option>
+                  <option value={5}>5 sets</option>
+                </select>
+              </label>
+              <label className="tourney-opt">
+                Nombre de grups
+                <select value={groupsChosen} onChange={(e) => setGroupsSel(Number(e.target.value))}>
+                  {Array.from({ length: Math.max(1, Math.min(10, Math.floor(participants.length / 2))) }, (_, i) => i + 1).map((g) => (
+                    <option key={g} value={g}>{g}{g === rec.numGroups ? " (recomanat)" : ""}</option>
+                  ))}
+                </select>
+              </label>
+              <p className="hint">
+                Durada estimada (grups + quadres, {TABLES_AVAILABLE} taules): ~{Math.floor(estimateMinutes(participants.length, groupsChosen, bestOfChosen, TABLES_AVAILABLE) / 60)} h {estimateMinutes(participants.length, groupsChosen, bestOfChosen, TABLES_AVAILABLE) % 60} min
+              </p>
               <button onClick={() => startTournament("grups")}>{t("format_grups")}</button>
               <button onClick={() => startTournament("suis")}>{t("format_suis")}</button>
               <button onClick={() => startTournament("nivellats")}>{t("format_nivellats")}</button>
@@ -989,6 +1033,7 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
           players={players}
           admin={admin}
           player={player}
+          bestOf={jornada.bestOf || 5}
           onSaveResult={saveMatchResult}
           onNextStep={
             jornada.status === "grups_r1"
@@ -1003,11 +1048,11 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
       )}
 
       {jornada.status === "suis" && (
-        <SwissView jornada={jornada} players={players} admin={admin} player={player} onSaveResult={saveMatchResult} onClose={closeJornada} />
+        <SwissView jornada={jornada} players={players} admin={admin} player={player} bestOf={jornada.bestOf || 5} onSaveResult={saveMatchResult} onClose={closeJornada} />
       )}
 
       {jornada.status === "eliminatories" && (
-        <BracketsView jornada={jornada} players={players} admin={admin} player={player} onSaveResult={saveMatchResult} onClose={closeJornada} />
+        <BracketsView jornada={jornada} players={players} admin={admin} player={player} bestOf={jornada.bestOf || 5} onSaveResult={saveMatchResult} onClose={closeJornada} />
       )}
 
       {jornada.status === "tancada" && jornada.podium && (
@@ -1021,7 +1066,7 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
   );
 }
 
-function GroupsView({ jornada, field, players, admin, player, onSaveResult, onNextStep, nextStepLabel, onCloseNoBrackets }) {
+function GroupsView({ jornada, field, players, admin, player, bestOf, onSaveResult, onNextStep, nextStepLabel, onCloseNoBrackets }) {
   const { t } = useLang();
   const groups = jornada[field] || [];
   const playerById = (id) => players.find((p) => p.id === id);
@@ -1067,6 +1112,7 @@ function GroupsView({ jornada, field, players, admin, player, onSaveResult, onNe
                   canFix={staff}
                   mine={mine(m)}
                   table={m.round ? tableOf(gi, m) : null}
+                  bestOf={bestOf}
                   confirmEntry={!staff}
                   onSave={(s1, s2, sets) => onSaveResult(field, g.id, m.id, s1, s2, sets)}
                   onReset={() => onSaveResult(field, g.id, m.id, null, null)}
@@ -1086,7 +1132,7 @@ function GroupsView({ jornada, field, players, admin, player, onSaveResult, onNe
   );
 }
 
-function SwissView({ jornada, players, admin, player, onSaveResult, onClose }) {
+function SwissView({ jornada, players, admin, player, bestOf, onSaveResult, onClose }) {
   const { t } = useLang();
   const rounds = jornada.swissRounds || [];
   const playerById = (id) => players.find((p) => p.id === id);
@@ -1132,6 +1178,7 @@ function SwissView({ jornada, players, admin, player, onSaveResult, onClose }) {
                 canEdit={staff || mine(m)}
                 canFix={staff}
                 mine={mine(m)}
+                bestOf={bestOf}
                 confirmEntry={!staff}
                 onSave={(s1, s2, sets) => onSaveResult("swissRounds", null, m.id, s1, s2, sets)}
                 onReset={() => onSaveResult("swissRounds", null, m.id, null, null)}
@@ -1150,7 +1197,7 @@ function SwissView({ jornada, players, admin, player, onSaveResult, onClose }) {
   );
 }
 
-function BracketsView({ jornada, players, admin, player, onSaveResult, onClose }) {
+function BracketsView({ jornada, players, admin, player, bestOf, onSaveResult, onClose }) {
   const { t } = useLang();
   const playerById = (id) => players.find((p) => p.id === id);
   const staff = admin?.type === "master" || admin?.type === "venue" || admin?.type === "referee";
@@ -1185,6 +1232,7 @@ function BracketsView({ jornada, players, admin, player, onSaveResult, onClose }
                 {m.p1 && m.p2 && !m.done && (staff || mine(m)) && (
                   <ResultEditor
                     names={[playerById(m.p1)?.name, playerById(m.p2)?.name]}
+                    bestOf={bestOf}
                     confirmEntry={!staff}
                     onSave={(s1, s2, sets) => saveBracketMatch(key, m.id, s1, s2, sets)}
                   />
@@ -1212,7 +1260,7 @@ function BracketsView({ jornada, players, admin, player, onSaveResult, onClose }
   );
 }
 
-function MatchRow({ match, p1, p2, canEdit, canFix, mine, table, confirmEntry, onSave, onReset }) {
+function MatchRow({ match, p1, p2, canEdit, canFix, mine, table, bestOf, confirmEntry, onSave, onReset }) {
   const { t } = useLang();
   if (match.bye) {
     return <li className="match-row bye">{p1?.name || p2?.name} — {t("bye_win")}</li>;
@@ -1237,7 +1285,7 @@ function MatchRow({ match, p1, p2, canEdit, canFix, mine, table, confirmEntry, o
       )}
       <span>{p2?.name}</span>
       {editing && (
-        <ResultEditor names={[p1?.name, p2?.name]} confirmEntry={confirmEntry} onSave={onSave} />
+        <ResultEditor names={[p1?.name, p2?.name]} bestOf={bestOf} confirmEntry={confirmEntry} onSave={onSave} />
       )}
     </li>
   );
@@ -1251,20 +1299,21 @@ function validSet(a, b) {
 }
 
 // Match = best of 5 sets. Enter the points of every set (e.g. 11-9); sets won are derived.
-function ResultEditor({ onSave, names, confirmEntry }) {
+function ResultEditor({ onSave, names, confirmEntry, bestOf = 5 }) {
+  const need = Math.ceil(bestOf / 2);
   const { t } = useLang();
-  const [rows, setRows] = useState(() => Array.from({ length: 5 }, () => ({ a: "", b: "" })));
+  const [rows, setRows] = useState(() => Array.from({ length: bestOf }, () => ({ a: "", b: "" })));
   const refs = useRef([]);
   const num = (v) => (v === "" ? NaN : Number(v));
   let w1 = 0, w2 = 0, shown = 0;
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < bestOf; i++) {
     shown = i + 1;
     const a = num(rows[i].a), b = num(rows[i].b);
     if (!validSet(a, b)) break;
     if (a > b) w1++; else w2++;
-    if (w1 === 3 || w2 === 3) break;
+    if (w1 === need || w2 === need) break;
   }
-  const over = w1 === 3 || w2 === 3;
+  const over = w1 === need || w2 === need;
   const setRow = (i, k, v) => {
     const clean = v.replace(/[^0-9]/g, "").slice(0, 2);
     setRows((r) => r.map((x, j) => (j === i ? { ...x, [k]: clean } : x)));
@@ -1274,7 +1323,7 @@ function ResultEditor({ onSave, names, confirmEntry }) {
     }
   };
   const submit = () => {
-    if (!over) { alert("Introdueix els punts de cada set fins que algú guanyi 3 sets (cada set: 11 punts amb 2 de diferència)."); return; }
+    if (!over) { alert(`Introdueix els punts de cada set fins que algú guanyi ${need} sets (cada set: 11 punts amb 2 de diferència).`); return; }
     const sets = rows.slice(0, shown).map((x) => ({ a: Number(x.a), b: Number(x.b) }));
     const detail = sets.map((x) => `${x.a}-${x.b}`).join(", ");
     if (confirmEntry && !window.confirm(`${names?.[0] || ""} ${w1} - ${w2} ${names?.[1] || ""}\n(${detail})\n\nConfirmes el resultat?`)) return;

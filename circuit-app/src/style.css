@@ -170,3 +170,6 @@
 .result-editor button{padding:8px 18px;font-size:13px}
 .result-editor button:disabled{opacity:.4}
 .set-detail{font-weight:400;color:var(--muted);font-size:11px}
+
+.tourney-opt{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;margin:6px 0}
+.tourney-opt select{padding:8px;border-radius:8px;border:1px solid #3a3442;background:#26212b;color:var(--text);font-size:14px}

@@ -62,12 +62,34 @@ function shuffle(arr) {
 
 // ids: array of player ids. ratings: { id: elo }. Returns an array of groups,
 // each group being an array of player ids (snake seeding by rating; ties random).
-export function makeGroups(ids, ratings = {}) {
+export function defaultNumGroups(n) {
+  if (n <= 9) return 1;
+  if (n <= 16) return 2;
+  return Math.max(2, Math.round(n / 5));
+}
+
+// What we recommend for a given turnout (the organiser can always override it).
+export function recommendTournament(n) {
+  const numGroups = defaultNumGroups(n);
+  return { numGroups, bestOf: n <= 14 ? 5 : 3 };
+}
+
+// Rough duration (minutes) of groups + Gold/Silver brackets.
+export function estimateMinutes(n, numGroups, bestOf, tables = 6) {
+  const base = Math.floor(n / numGroups), extra = n % numGroups;
+  let matches = 0;
+  for (let g = 0; g < numGroups; g++) {
+    const size = base + (g < extra ? 1 : 0);
+    matches += (size * (size - 1)) / 2;
+  }
+  matches += Math.max(0, n - 2); // Gold + Silver brackets
+  const perMatch = bestOf === 3 ? 10 : 14;
+  return Math.ceil(matches / tables) * perMatch;
+}
+
+export function makeGroups(ids, ratings = {}, numGroupsOverride = null) {
   const n = ids.length;
-  let numGroups;
-  if (n <= 9) numGroups = 1;
-  else if (n <= 16) numGroups = 2;
-  else numGroups = Math.max(2, Math.round(n / 5));
+  const numGroups = Math.max(1, Math.min(numGroupsOverride || defaultNumGroups(n), Math.floor(n / 2) || 1));
   const sorted = shuffle(ids).sort((a, b) => (ratings[b] ?? ELO_START) - (ratings[a] ?? ELO_START));
   const groups = Array.from({ length: numGroups }, () => []);
   let dir = 1, g = 0;
