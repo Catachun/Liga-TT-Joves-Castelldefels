@@ -21,7 +21,7 @@ import { ref, uploadString, getDownloadURL } from "firebase/storage";
 import { db, storage } from "./firebase";
 import { useLang, LangProvider } from "./i18n";
 import { getFaq, FAQ_TITLE } from "./faq";
-import { MASTER_PIN, MAX_PARTICIPANTS, MAX_WAITLIST, VENUES, JORNADA_PRICE, TABLES_AVAILABLE, AFI_LICENSE_PRICE, JOTFORM_FEDERATION_URL, resolvePin, scheduleForDate } from "./config";
+import { MAX_PARTICIPANTS, MAX_WAITLIST, VENUES, JORNADA_PRICE, TABLES_AVAILABLE, AFI_LICENSE_PRICE, JOTFORM_FEDERATION_URL, resolvePin, scheduleForDate } from "./config";
 import {
   ELO_START,
   uid,
@@ -1802,8 +1802,13 @@ function AdminGate({ admin, setAdmin }) {
 
   if (admin) return null;
 
-  const submit = () => {
-    const resolved = resolvePin(pin);
+  const [checking, setChecking] = useState(false);
+
+  const submit = async () => {
+    if (checking) return;
+    setChecking(true);
+    const resolved = await resolvePin(pin);
+    setChecking(false);
     if (resolved) {
       setAdmin(resolved);
       setPin("");
@@ -1822,7 +1827,7 @@ function AdminGate({ admin, setAdmin }) {
         value={pin}
         onChange={(e) => setPin(e.target.value)}
       />
-      <button onClick={submit}>{t("admin_enter")}</button>
+      <button disabled={checking} onClick={submit}>{t("admin_enter")}</button>
       {error && <p className="error">{t("admin_wrong_pin")}</p>}
     </div>
   );

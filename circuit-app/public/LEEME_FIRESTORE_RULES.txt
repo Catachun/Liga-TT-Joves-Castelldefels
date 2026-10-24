@@ -56,7 +56,7 @@ Storage sin pasar por la app. Riesgo bajo para un circuito de club, pero queda
 anotado por si en el futuro quieres cerrarlo con un login real.
 
 MODO GESTIÓN (admin):
-Dentro de la app, en Perfil → "Accés gestió (organització)" → PIN: 2580
+Dentro de la app, en Perfil → "Accés gestió (organització)" → (el PIN el tens tu; no s'escriu mai al repositori)
 
 SELFIE OBLIGATORIA:
 Al registrarse por primera vez, el jugador debe hacerse un selfie (se le pide

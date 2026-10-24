@@ -1,19 +1,17 @@
 // Constants extracted/verified from the last production bundle.
-export const MASTER_PIN = "011328";
+// Organiser PINs are NOT stored here: they are checked server-side by
+// netlify/functions/check-pin.js (see ADMIN_PIN_* environment variables).
 export const MAX_PARTICIPANTS = 40;
 export const MAX_WAITLIST = 5;
-export const REFEREE_PIN = "1111"; // present in bundle, currently unused in UI
 export const MAX_FAMILY_MEMBERS = 5;
 
 export const VENUES = {
   joves: {
     name: "Institut Josep Lluís Sert (Joves)",
-    pin: "1470",
     quotaClub: 0,
   },
   espronceda: {
     name: "Espronceda",
-    pin: "3690",
     quotaClub: 2,
   },
 };
@@ -25,14 +23,21 @@ export const JORNADA_PRICE = 6;
 export const AFI_LICENSE_PRICE = 19;
 export const JOTFORM_FEDERATION_URL = "https://form.jotform.com/262702301168045";
 
-// Given a PIN, returns { type: 'master' } | { type: 'referee' } | { type: 'venue', venueKey } | null
-export function resolvePin(pin) {
-  if (pin === MASTER_PIN) return { type: "master" };
-  if (pin === REFEREE_PIN) return { type: "referee" };
-  for (const [key, v] of Object.entries(VENUES)) {
-    if (pin === v.pin) return { type: "venue", venueKey: key };
+// Given a PIN, asks the server and returns
+// { type: 'master' } | { type: 'referee' } | { type: 'venue', venueKey } | null
+export async function resolvePin(pin) {
+  try {
+    const res = await fetch("/.netlify/functions/check-pin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data && data.type ? data : null;
+  } catch {
+    return null;
   }
-  return null;
 }
 
 // Room opening / competition start time based on day of week.
