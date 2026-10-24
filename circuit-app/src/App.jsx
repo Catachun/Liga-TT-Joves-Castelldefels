@@ -1120,7 +1120,7 @@ function GroupsView({ jornada, field, players, admin, player, bestOf, onSaveResu
                   p1={playerById(m.p1)}
                   p2={playerById(m.p2)}
                   referee={m.refereeId ? playerById(m.refereeId) : null}
-                  canEdit={staff || mine(m)}
+                  canEdit={staff || mine(m) || (!!player && m.refereeId === player.id)}
                   canFix={staff}
                   mine={mine(m)}
                   turn={m.turn}
