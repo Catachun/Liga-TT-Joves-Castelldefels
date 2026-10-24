@@ -42,6 +42,7 @@ import {
   computePodium,
   applyJornadaResults,
   recommendTournament,
+  scheduleGroups,
   estimateMinutes,
   BADGE_ICONS,
   BADGE_POINTS,
@@ -799,6 +800,7 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
         players: g,
         matches: roundRobin(g),
       }));
+      scheduleGroups(groupsData, TABLES_AVAILABLE);
       await updateDoc(jref, {
         format,
         bestOf: bestOfChosen,
@@ -841,6 +843,7 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
       players: g,
       matches: roundRobin(g),
     }));
+    scheduleGroups(groupsR2, TABLES_AVAILABLE);
     await updateDoc(doc(db, "jornadas", jornada.id), {
       status: "grups_r2",
       groupsR2,
@@ -1073,18 +1076,11 @@ function GroupsView({ jornada, field, players, admin, player, bestOf, onSaveResu
   const staff = admin?.type === "master" || admin?.type === "venue" || admin?.type === "referee";
   const mine = (m) => !!player && (m.p1 === player.id || m.p2 === player.id);
   const allComplete = groups.every((g) => groupComplete(g));
-  // table suggestion: within each round, matches of all groups are numbered in order
-  const tableOf = (gi, m) => {
-    let n = 0;
-    groups.forEach((g, i) => {
-      if (i < gi) n += g.matches.filter((x) => x.round === m.round).length;
-    });
-    n += groups[gi].matches.filter((x) => x.round === m.round).findIndex((x) => x.id === m.id) + 1;
-    return n <= TABLES_AVAILABLE ? n : null;
-  };
+  const turnsTotal = Math.max(0, ...groups.flatMap((g) => g.matches.map((m) => m.turn || 0)));
 
   return (
     <div className="groups-view">
+      {turnsTotal > 0 && <p className="hint small">T = torn, M = mesa ({TABLES_AVAILABLE} mesas, {turnsTotal} torns en total). Els partits d'un mateix torn es juguen a la vegada.</p>}
       {groups.map((g, gi) => {
         const standings = groupStandings(g);
         return (
@@ -1102,7 +1098,7 @@ function GroupsView({ jornada, field, players, admin, player, bestOf, onSaveResu
               </tbody>
             </table>
             <ul className="match-list">
-              {g.matches.map((m) => (
+              {[...g.matches].sort((x, y) => (x.turn || 0) - (y.turn || 0) || (x.table || 0) - (y.table || 0)).map((m) => (
                 <MatchRow
                   key={m.id}
                   match={m}
@@ -1112,7 +1108,8 @@ function GroupsView({ jornada, field, players, admin, player, bestOf, onSaveResu
                   canEdit={staff || mine(m)}
                   canFix={staff}
                   mine={mine(m)}
-                  table={m.round ? tableOf(gi, m) : null}
+                  turn={m.turn}
+                  table={m.table}
                   bestOf={bestOf}
                   confirmEntry={!staff}
                   onSave={(s1, s2, sets) => onSaveResult(field, g.id, m.id, s1, s2, sets)}
@@ -1261,7 +1258,7 @@ function BracketsView({ jornada, players, admin, player, bestOf, onSaveResult, o
   );
 }
 
-function MatchRow({ match, p1, p2, referee, canEdit, canFix, mine, table, bestOf, confirmEntry, onSave, onReset }) {
+function MatchRow({ match, p1, p2, referee, canEdit, canFix, mine, turn, table, bestOf, confirmEntry, onSave, onReset }) {
   const { t } = useLang();
   if (match.bye) {
     return <li className="match-row bye">{p1?.name || p2?.name} — {t("bye_win")}</li>;
@@ -1269,7 +1266,7 @@ function MatchRow({ match, p1, p2, referee, canEdit, canFix, mine, table, bestOf
   const editing = !match.done && canEdit;
   return (
     <li className={"match-row" + (mine ? " mine" : "") + (editing ? " editing" : "") + (referee ? " has-ref" : "")}>
-      {match.round && <span className="rnd">R{match.round}{table ? ` · M${table}` : ""}</span>}
+      {turn ? <span className="rnd">T{turn} · M{table}</span> : match.round ? <span className="rnd">R{match.round}</span> : null}
       <span>{p1?.name}</span>
       {match.done ? (
         <span className="result">

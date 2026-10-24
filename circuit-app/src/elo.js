@@ -153,6 +153,39 @@ const diffs = (r) => [r.wins, r.setsWon - r.setsLost, r.pointsFor - r.pointsAgai
 
 // Table tennis tie-break: players level on wins are ranked by a mini-league among
 // themselves (wins, set difference, point difference), then by overall set / point difference.
+// Timetable for the available tables. Matches are taken round by round and placed in the earliest
+// turn where both players are free and a table is free. Each match also gets a referee: a player
+// of the same group who is not playing in that turn (spread as evenly as possible).
+export function scheduleGroups(groups, tables = 4) {
+  const slots = [];
+  const refCount = {};
+  const maxRound = Math.max(0, ...groups.flatMap((g) => g.matches.map((m) => m.round || 0)));
+  for (let r = 1; r <= maxRound; r++) {
+    groups.forEach((g) => g.matches.filter((m) => m.round === r).forEach((m) => {
+      let k = 0;
+      while (true) {
+        slots[k] ||= { players: new Set(), refs: new Set(), items: [] };
+        const sl = slots[k];
+        if (sl.items.length < tables && !sl.players.has(m.p1) && !sl.players.has(m.p2)) {
+          sl.players.add(m.p1); sl.players.add(m.p2);
+          sl.items.push({ m, g });
+          m.turn = k + 1; m.table = sl.items.length;
+          break;
+        }
+        k++;
+      }
+    }));
+  }
+  slots.forEach((sl) => sl.items.forEach(({ m, g }) => {
+    const cands = (g.players || []).filter((p) => !sl.players.has(p) && !sl.refs.has(p));
+    cands.sort((x, y) => (refCount[x] || 0) - (refCount[y] || 0));
+    const pick = cands[0] || null;
+    m.refereeId = pick;
+    if (pick) { sl.refs.add(pick); refCount[pick] = (refCount[pick] || 0) + 1; }
+  }));
+  return groups;
+}
+
 export function groupStandings(group) {
   const ids = group.players || [];
   const matches = group.matches || [];

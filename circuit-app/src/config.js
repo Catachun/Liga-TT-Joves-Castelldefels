@@ -45,4 +45,4 @@ export function scheduleForDate(dateStr) {
 }
 
 // Taules disponibles a la sala (per assignar taula a cada partit de grups)
-export const TABLES_AVAILABLE = 6;
+export const TABLES_AVAILABLE = 4;
