@@ -216,20 +216,34 @@ export function bracketRoundName(total, idx, t) {
 export function generateSwissRound(playerIds, ratings = {}, played = []) {
   const done = new Set(played);
   const key = (a, b) => [a, b].sort().join("-");
+  const hadBye = new Set();
+  played.forEach((k) => {
+    const parts = k.split("-");
+    if (parts.length === 2 && (parts[0] === "" || parts[1] === "")) hadBye.add(parts[0] || parts[1]);
+  });
   const pool = [...playerIds].sort((a, b) => (ratings[b] ?? 0) - (ratings[a] ?? 0));
   const matches = [];
   if (pool.length % 2) {
-    // bye to the lowest-ranked player
-    const bye = pool.pop();
+    // bye: lowest-ranked player who has not had one yet (else lowest-ranked)
+    let idx = -1;
+    for (let i = pool.length - 1; i >= 0; i--) { if (!hadBye.has(pool[i])) { idx = i; break; } }
+    if (idx === -1) idx = pool.length - 1;
+    const bye = pool.splice(idx, 1)[0];
     matches.push({ id: uid(), p1: bye, p2: null, s1: null, s2: null, winner: bye, done: true, bye: true });
   }
-  while (pool.length > 1) {
-    const p1 = pool.shift();
-    let idx = pool.findIndex((p2) => !done.has(key(p1, p2)));
-    if (idx === -1) idx = 0;
-    const p2 = pool.splice(idx, 1)[0];
-    matches.push({ id: uid(), p1, p2, s1: null, s2: null, winner: null, done: false });
-  }
+  // backtracking: pair the top player with the closest rival not met yet
+  const solve = (rest, allowRepeat) => {
+    if (!rest.length) return [];
+    const [p1, ...others] = rest;
+    for (let i = 0; i < others.length; i++) {
+      if (!allowRepeat && done.has(key(p1, others[i]))) continue;
+      const sub = solve([...others.slice(0, i), ...others.slice(i + 1)], allowRepeat);
+      if (sub) return [[p1, others[i]], ...sub];
+    }
+    return null;
+  };
+  const pairs = solve(pool, false) || solve(pool, true) || [];
+  pairs.forEach(([a, b]) => matches.push({ id: uid(), p1: a, p2: b, s1: null, s2: null, winner: null, done: false }));
   return matches;
 }
 
