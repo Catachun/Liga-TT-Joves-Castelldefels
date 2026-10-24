@@ -440,7 +440,7 @@ export function applyJornadaResults(jornada, players, opts = {}) {
     if (!st.touched) return;
     const earned = computeBadges(st);
     const fresh = earned.filter((k) => !st.earnedBadges.includes(k));
-    if (!opts.noBadges) fresh.forEach((k) => { st.elo += BADGE_POINTS[k] || 0; });
+    if (!opts.noBadges) st.elo += Math.min(BADGE_CAP_PER_JORNADA, fresh.reduce((sum, k) => sum + Math.ceil((BADGE_POINTS[k] || 0) / 2), 0));
     st.peakElo = Math.max(st.peakElo, st.elo);
     const gain = st.elo - st.startElo;
     if (gain > mvpGain) { mvp = id; mvpGain = gain; }
@@ -503,6 +503,8 @@ export const BADGE_ICONS = {
   podium: "🏆", champ_gold: "🥇", champ_silver: "🥈",
 };
 
+// badge bonus is halved and capped per jornada so a first big jornada does not inflate the ranking
+export const BADGE_CAP_PER_JORNADA = 30;
 export const BADGE_POINTS = {
   first_win: 5, streak3: 5, streak5: 10, streak10: 20,
   giant: 10, veteran: 10, legend50: 30, six_hundred: 10,
