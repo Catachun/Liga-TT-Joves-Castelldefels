@@ -1327,6 +1327,7 @@ function ResultEditor({ onSave, names, confirmEntry, bestOf = 5 }) {
   const { t } = useLang();
   const [rows, setRows] = useState(() => Array.from({ length: bestOf }, () => ({ a: "", b: "" })));
   const refs = useRef([]);
+  const [status, setStatus] = useState("idle");
   const num = (v) => (v === "" ? NaN : Number(v));
   let w1 = 0, w2 = 0, shown = 0;
   for (let i = 0; i < bestOf; i++) {
@@ -1350,7 +1351,15 @@ function ResultEditor({ onSave, names, confirmEntry, bestOf = 5 }) {
     const sets = rows.slice(0, shown).map((x) => ({ a: Number(x.a), b: Number(x.b) }));
     const detail = sets.map((x) => `${x.a}-${x.b}`).join(", ");
     if (confirmEntry && !window.confirm(`${names?.[0] || ""} ${w1} - ${w2} ${names?.[1] || ""}\n(${detail})\n\nConfirmes el resultat?`)) return;
-    onSave(w1, w2, sets);
+    setStatus("saving");
+    (async () => {
+      for (let attempt = 0; attempt < 4; attempt++) {
+        try { await onSave(w1, w2, sets); return; } catch (e) {
+          if (attempt < 3) await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+        }
+      }
+      setStatus("error");
+    })();
   };
   return (
     <div className="result-editor">
@@ -1367,8 +1376,10 @@ function ResultEditor({ onSave, names, confirmEntry, bestOf = 5 }) {
       })}
       <div className="set-footer">
         <span className="set-total">{w1} - {w2}</span>
-        <button disabled={!over} onClick={submit}>{t("save")}</button>
+        <button disabled={!over || status === "saving"} onClick={submit}>{status === "saving" ? "Desant…" : t("save")}</button>
       </div>
+      {status === "saving" && <p className="hint small">Desant el resultat… no tanquis l'app.</p>}
+      {status === "error" && <p className="hint small" style={{ color: "#c0392b", fontWeight: 700 }}>⚠️ No s'ha pogut desar (revisa la connexió). Torna a prémer «Desar»; el resultat continua escrit.</p>}
     </div>
   );
 }
