@@ -158,7 +158,7 @@ const diffs = (r) => [r.wins, r.setsWon - r.setsLost, r.pointsFor - r.pointsAgai
 // previous turn (when that is impossible, the least back-to-back option is used). Each match also
 // gets a referee from its group: someone resting in that turn, who did not referee the turn before,
 // chosen so that refereeing is shared out evenly.
-export function scheduleGroups(groups, tables = 4) {
+function scheduleCore(groups, tables) {
   const maxRound = Math.max(0, ...groups.flatMap((g) => g.matches.map((m) => m.round || 0)));
   const remaining = [];
   for (let r = 1; r <= maxRound; r++) groups.forEach((g) => g.matches.filter((m) => m.round === r).forEach((m) => remaining.push({ m, g })));
@@ -203,6 +203,27 @@ export function scheduleGroups(groups, tables = 4) {
     });
   }
   return groups;
+}
+
+// Each group gets its own tables (shared out by number of matches) so a group plays together and
+// its resting players referee. If there are more groups than tables they share the tables.
+export function scheduleGroups(groups, tables = 4) {
+  if (groups.length > 1 && groups.length <= tables) {
+    const k = groups.map(() => 1);
+    for (let left = tables - groups.length; left > 0; left--) {
+      let best = 0;
+      groups.forEach((g, i) => { if (g.matches.length / k[i] > groups[best].matches.length / k[best]) best = i; });
+      k[best]++;
+    }
+    let off = 0;
+    groups.forEach((g, i) => {
+      scheduleCore([g], k[i]);
+      g.matches.forEach((m) => { m.table += off; });
+      off += k[i];
+    });
+    return groups;
+  }
+  return scheduleCore(groups, tables);
 }
 
 export function groupStandings(group) {
