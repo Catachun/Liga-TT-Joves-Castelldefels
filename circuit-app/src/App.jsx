@@ -834,6 +834,14 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
     await updateDoc(jref, { [field]: list });
   };
 
+  const rescheduleGroups = async () => {
+    const field = jornada.status === "grups_r2" ? "groupsR2" : "groups";
+    const groups = JSON.parse(JSON.stringify(jornada[field] || []));
+    // only the matches still to play are re-planned; played ones keep their result
+    scheduleGroups(groups.map((g) => ({ ...g, matches: g.matches.filter((m) => !m.done) })), TABLES_AVAILABLE);
+    await updateDoc(doc(db, "jornadas", jornada.id), { [field]: groups });
+  };
+
   const generateRound2Nivellats = async () => {
     const groups = jornada.groups || [];
     const standingsByGroup = groups.map((g) => groupStandings(g));
@@ -1029,6 +1037,13 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
         </div>
       )}
 
+      {(jornada.status === "grups" || jornada.status === "grups_r1" || jornada.status === "grups_r2") && (admin?.type === "master" || admin?.type === "venue") && (
+        <p className="hint small">
+          <button className="secondary small" onClick={() => window.confirm("Reajustar torns, taules i àrbitres dels partits pendents? Els resultats no es toquen.") && rescheduleGroups()}>
+            🔄 Reajustar calendari ({TABLES_AVAILABLE} taules)
+          </button>
+        </p>
+      )}
       {(jornada.status === "grups" || jornada.status === "grups_r1" || jornada.status === "grups_r2") && (
         <GroupsView
           jornada={jornada}
