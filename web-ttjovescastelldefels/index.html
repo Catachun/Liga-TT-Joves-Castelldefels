@@ -117,14 +117,14 @@ img{max-width:100%;display:block}
 /* NAV */
 .scroll-progress{position:fixed;top:0;left:0;height:3px;width:0%;background:linear-gradient(90deg,var(--purple),var(--yellow));z-index:1200;transition:width .1s ease-out}
 nav{position:fixed;top:0;left:0;right:0;z-index:1000;background:rgba(10,10,11,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);transition:background .2s}
-.nav-inner{max-width:1180px;margin:0 auto;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.nav-inner{max-width:1360px;margin:0 auto;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;gap:20px}
 .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
 .nav-logo-badge{width:36px;height:36px;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-family:'Inter',sans-serif;font-weight:700;font-size:15px;color:var(--black);flex-shrink:0}
 .nav-logo-badge-img{width:38px;height:38px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1.5px solid var(--line-strong)}
-.nav-logo-text{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1.5px;line-height:1.1}
+.nav-logo-text{white-space:nowrap;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1.5px;line-height:1.1}
 .nav-logo-text span{color:var(--purple-light)}
-.nav-links{display:flex;align-items:center;gap:30px}
-.nav-links a{font-size:13px;font-weight:600;text-decoration:none;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;transition:color .2s;position:relative}
+.nav-links{display:flex;align-items:center;gap:22px}
+.nav-links a{white-space:nowrap;font-size:13px;font-weight:600;text-decoration:none;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;transition:color .2s;position:relative}
 .nav-links a:not(.nav-cta)::after{content:"";position:absolute;bottom:-4px;left:0;width:0;height:1px;background:var(--yellow);transition:width .2s}
 .nav-links a:not(.nav-cta):hover::after{width:100%}
 .nav-links a:hover{color:var(--white)}
@@ -385,6 +385,11 @@ footer{background:var(--charcoal);border-top:1px solid var(--line);padding:64px 
 .footer-social a{font-size:12px;color:var(--muted2);text-decoration:none}
 .footer-social a:hover{color:var(--yellow)}
 
+@media(max-width:1260px){
+  .nav-links{display:none}
+  .lang-switcher.desktop{display:none}
+  .nav-hamburger{display:flex}
+}
 @media(max-width:900px){
   .nav-links{display:none}
   .lang-switcher.desktop{display:none}
