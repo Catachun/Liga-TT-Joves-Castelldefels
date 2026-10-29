@@ -46,7 +46,13 @@ for (const file of readdirSync(QUEUE).filter(f => f.endsWith('.json')).sort()) {
     const collab = post.collaborators?.length ? { collaborators: JSON.stringify(post.collaborators) } : {};
     console.log(`Publicant ${file}…`);
     let creation_id;
-    if (post.images?.length > 1) {
+    if (post.story) {
+      // Història (24 h): imatge 9:16 JPEG, sense peu ni col·laboradors
+      ({ id: creation_id } = await call(`${IG_USER_ID}/media`, {
+        media_type: 'STORIES',
+        image_url: url(post.image),
+      }));
+    } else if (post.images?.length > 1) {
       // Carrusel: "images": ["ruta1.jpg", "ruta2.jpg", ...] (2-10 imatges)
       const children = [];
       for (const img of post.images) {
