@@ -272,15 +272,7 @@ function LoginScreen({ onLogin, jornadas }) {
     setLoading(true);
     setError("");
     try {
-      let selfieUrl = selfie || null;
-      if (selfie) try {
-        const path = `selfies/${uid()}.jpg`;
-        const sref = ref(storage, path);
-        await uploadString(sref, selfie, "data_url");
-        selfieUrl = await getDownloadURL(sref);
-      } catch {
-        // keep the data URL inline if storage upload fails
-      }
+      const selfieUrl = selfie ? await shrinkDataUrl(selfie) : null;
       const newPlayer = {
         name: name.trim(),
         familyEmail: email.trim().toLowerCase(),
@@ -374,7 +366,7 @@ function LoginScreen({ onLogin, jornadas }) {
           <div className="family-list">
             {familyMembers.map((m) => (
               <button key={m.id} className="family-member" onClick={() => onLogin(m)}>
-                {(m.selfieUrl || m.photoURL) && <img src={m.selfieUrl || m.photoURL} alt={m.name} />}
+                {(m.selfieUrl || m.photoURL) && <img src={m.selfieUrl || m.photoURL} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} />}
                 <span>{m.name}</span>
               </button>
             ))}
@@ -575,7 +567,7 @@ function RankingTab({ players, jornadas = [] }) {
             return (
               <li key={p.id} className="ranking-row" style={{ cursor: "pointer" }} onClick={() => setViewId(p.id)}>
                 <span className="pos">{i + 1}</span>
-                {(p.selfieUrl || p.photoURL) && <img src={p.selfieUrl || p.photoURL} alt={p.name} className="avatar" />}
+                <SafeImg src={p.selfieUrl || p.photoURL} name={p.name} className="avatar" />
                 <span className="name">{p.name}{p.nickname ? <span className="nick"> "{p.nickname}"</span> : null}</span>
                 <span className="division">{div.icon}</span>
                 <span className="elo">{Math.round(p.elo || ELO_START)}{liveInfo && p.delta ? <small style={{ color: p.delta > 0 ? "#1e8e3e" : "#c0392b", marginLeft: 4 }}>{p.delta > 0 ? "▲" : "▼"}{Math.abs(p.delta)}</small> : null}</span>
@@ -598,7 +590,7 @@ function RankingTab({ players, jornadas = [] }) {
             <div className="modal-card" onClick={(e) => e.stopPropagation()}>
               <button className="ghost modal-close" onClick={() => setViewId(null)}>✕ {t("calc_close")}</button>
               <div className="perfil-header" style={{ textAlign: "center" }}>
-                {(vp.selfieUrl || vp.photoURL) ? <img src={vp.selfieUrl || vp.photoURL} alt={vp.name} className="perfil-avatar" /> : <div className="perfil-avatar perfil-avatar-empty">{(vp.name || "?").slice(0, 1).toUpperCase()}</div>}
+                <SafeImg src={vp.selfieUrl || vp.photoURL} name={vp.name} className="perfil-avatar" />
                 <h2>{vp.name}{vp.nickname ? <span className="nick"> "{vp.nickname}"</span> : null}</h2>
                 <p className="division-badge">{vdiv.icon} {t(`division_${vdiv.key}`)}</p>
                 <p className="elo-line">{Math.round(lp.elo || ELO_START)} ELO · {t("peak_elo")}: {Math.round(peakEloFor(lp))}</p>
@@ -1531,6 +1523,33 @@ function PodiumView({ jornada, players }) {
 // ---------------------------------------------------------------------------
 // Perfil tab
 // ---------------------------------------------------------------------------
+// Photo that falls back to the player's initial if the image cannot be loaded.
+function SafeImg({ src, name, className, onClick }) {
+  const [bad, setBad] = useState(false);
+  useEffect(() => { setBad(false); }, [src]);
+  if (!src || bad) {
+    return <div className={`${className || ""} avatar-fallback perfil-avatar-empty`} onClick={onClick}>{(name || "?").slice(0, 1).toUpperCase()}</div>;
+  }
+  return <img src={src} alt={name} className={className} onClick={onClick} onError={() => setBad(true)} />;
+}
+
+// Shrink any image data URL to max 256px (small JPEG, ~15 KB) so it can be stored inline in Firestore.
+function shrinkDataUrl(dataUrl, max = 256) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.round(img.width * scale);
+      c.height = Math.round(img.height * scale);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      resolve(c.toDataURL("image/jpeg", 0.8));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 // Downscale a photo to max 512px (JPEG) so it stays small in Firestore/Storage.
 function resizeImage(file, max = 512) {
   return new Promise((resolve, reject) => {
@@ -1562,15 +1581,7 @@ function PerfilTab({ player, players, onLogout, onUpdate }) {
     if (!player.consent && !window.confirm(t("login_consent") + "\n\n" + t("login_consent_minor"))) return;
     setSavingPhoto(true);
     try {
-      const dataUrl = await resizeImage(file);
-      let selfieUrl = dataUrl;
-      try {
-        const sref = ref(storage, `selfies/${uid()}.jpg`);
-        await uploadString(sref, dataUrl, "data_url");
-        selfieUrl = await getDownloadURL(sref);
-      } catch {
-        // keep the (small) data URL inline if storage upload fails
-      }
+      const selfieUrl = await shrinkDataUrl(await resizeImage(file));
       await updateDoc(doc(db, "players", player.id), { selfieUrl, consent: true });
       onUpdate({ ...player, selfieUrl, consent: true });
     } catch {
@@ -1614,7 +1625,7 @@ function PerfilTab({ player, players, onLogout, onUpdate }) {
     <div className="perfil-tab">
       <div className="perfil-header">
         {(player.selfieUrl || player.photoURL) ? (
-          <img src={player.selfieUrl || player.photoURL} alt={player.name} className="perfil-avatar" onClick={() => photoInput.current?.click()} />
+          <SafeImg src={player.selfieUrl || player.photoURL} name={player.name} className="perfil-avatar" onClick={() => photoInput.current?.click()} />
         ) : (
           <div className="perfil-avatar perfil-avatar-empty" onClick={() => photoInput.current?.click()}>{(player.name || "?").slice(0, 1).toUpperCase()}</div>
         )}
