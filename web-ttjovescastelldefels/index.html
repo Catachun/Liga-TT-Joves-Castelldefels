@@ -202,6 +202,8 @@ section{padding:120px 0}
 .score-row:hover .score-lvl{color:var(--yellow)}
 .score-mid .score-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.5px;line-height:1.1;margin-bottom:6px}
 .score-mid .score-age{font-family:'Inter',sans-serif;font-weight:700;font-size:11.5px;color:var(--purple-light);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.score-photo{display:block;width:100%;max-width:360px;aspect-ratio:16/9;object-fit:cover;border-radius:10px;margin-top:14px;border:1px solid var(--line-strong)}
+.score-time-new{display:block;font-size:12.5px;font-weight:600;color:var(--yellow);margin-top:6px}
 .score-mid p{font-size:13.5px;color:var(--muted);font-weight:300;max-width:520px}
 .score-time{text-align:right;font-family:'Inter',sans-serif;font-weight:700}
 .score-time-val{font-size:14px;font-weight:700;color:var(--white);display:block;margin-bottom:4px}
@@ -651,9 +653,12 @@ body.cookie-banner-visible .back-to-top{bottom:100px}
           <div class="score-title" data-i18n="p5_title">Adults</div>
           <div class="score-age" data-i18n="p5_sub">Institut Josep Lluís Sert</div>
           <p data-i18n="p5_desc">Entrenament tècnic i ambient de club per a jugadors adults.</p>
+          <img class="score-photo" src="assets/adults-grup.jpg" alt="Entrenament del grup d'adults del TT Joves Castelldefels a l'Institut Josep Lluís Sert" loading="lazy">
         </div>
         <div class="score-time">
           <span class="score-time-val" data-i18n="p5_time">Dl · Dj 19:30–21:00</span>
+          <span class="score-time-val" data-i18n="p5_time2">Dt · Dc 19:30–21:00</span>
+          <span class="score-time-new" data-i18n="p5_new">Nou grup · 8 places</span>
           <span class="score-time-loc" data-i18n="loc_sert">Institut Josep Lluís Sert</span>
         </div>
       </div>
@@ -711,14 +716,14 @@ body.cookie-banner-visible .back-to-top{bottom:100px}
     <div class="competicio-layout">
       <div class="competicio-intro">
         <p data-i18n="comp_p1">El Club TT Joves Castelldefels participa en totes les competicions oficials de la Federació Catalana de Tennis Taula (FCTT). Aquesta temporada l'equip masculí ha aconseguit l'ascens a 2ª Nacional i el club estrena equip femení a 1ª Nacional.</p>
-        <p data-i18n="comp_p2">La Lliga Interna del club, amb sistema de ranking ELO, arrenca a partir de setembre.</p>
+        <p data-i18n="comp_p2">El TT Circuit, el circuit obert del club amb ranking ELO, ja ha començat: la 1a jornada es va jugar el 24 d'octubre i la propera és el 14 de novembre.</p>
       </div>
       <div class="comp-list">
         <div class="comp-item"><div><strong data-i18n="comp_i0">Equip Femení</strong><span data-i18n="comp_i0s">1ª Nacional</span></div><span class="comp-badge on" data-i18n="badge_active">Actiu</span></div>
         <div class="comp-item"><div><strong data-i18n="comp_i1">Lligues FCTT</strong><span data-i18n="comp_i1s">Competició federada per equips</span></div><span class="comp-badge on" data-i18n="badge_active">Actiu</span></div>
         <div class="comp-item"><div><strong data-i18n="comp_i2">Open Catalunya</strong><span data-i18n="comp_i2s">Torneigs individuals oberts</span></div><span class="comp-badge on" data-i18n="badge_active">Actiu</span></div>
         <div class="comp-item"><div><strong data-i18n="comp_i3">Promeses</strong><span data-i18n="comp_i3s">Categories de joves promeses</span></div><span class="comp-badge on" data-i18n="badge_active">Actiu</span></div>
-        <div class="comp-item"><div><strong data-i18n="comp_i4">Lliga Interna</strong><span data-i18n="comp_i4s">Ranking ELO del club</span></div><span class="comp-badge soon" data-i18n="badge_soon">Setembre</span></div>
+        <div class="comp-item"><div><strong data-i18n="comp_i4">TT Circuit</strong><span data-i18n="comp_i4s">Circuit obert amb ranking ELO</span></div><span class="comp-badge on" data-i18n="badge_active">Actiu</span></div>
       </div>
     </div>
   </div>
@@ -999,7 +1004,7 @@ ca:{
   p3_tag:"Nivell 3 · Elit",p3_title:"Competició",p3_sub:"Jugadors federats FCTT",
   p3_desc:"Jugadors de rendiment. Equip promocionat a 2ª Nacional.",p3_time:"Dt · Dc · Dv 18:00–20:00",
   p4_tag:"Tots els nivells",p4_title:"Veterans +65",p4_sub:"Institut Josep Lluís Sert",
-  p4_desc:"Entrenament tècnic i joc en punts per a la categoria de jubilats.",p4_time:"Dt · Dj 16:15–17:30",p5_title:"Adults",p5_sub:"Institut Josep Lluís Sert",p5_desc:"Entrenament tècnic i ambient de club per a jugadors adults.",p5_time:"Dl · Dj 19:30–21:00",p6_title:"Dones",p6_sub:"Institut Les Marines",p6_desc:"Grup exclusiu per a dones de tots els nivells. Un espai propi, sense pressió, on aprendre o millorar el joc.",p6_time:"Dv 18:30–20:00",
+  p4_desc:"Entrenament tècnic i joc en punts per a la categoria de jubilats.",p4_time:"Dt · Dj 16:15–17:30",p5_title:"Adults",p5_sub:"Institut Josep Lluís Sert",p5_desc:"Entrenament tècnic i ambient de club per a jugadors adults.",p5_time:"Dl · Dj 19:30–21:00",p5_time2:"Dt · Dc 19:30–21:00",p5_new:"Nou grup · 8 places",p6_title:"Dones",p6_sub:"Institut Les Marines",p6_desc:"Grup exclusiu per a dones de tots els nivells. Un espai propi, sense pressió, on aprendre o millorar el joc.",p6_time:"Dv 18:30–20:00",
   lbl_horari:"Horari",lbl_lloc:"Lloc",lbl_preu:"Preu",loc_sert:"Institut Josep Lluís Sert",loc_marines:"Institut Les Marines",
   adapt_label:"Inclusió i comunitat",adapt_label_short:"Programes Adaptats",adapt_title:"Programes <span class=\"y\">adaptats</span>",
   adapt_desc:"El tenis de taula com a eina d'activitat física, benestar i cohesió social. Quatre línies especialitzades, pensades per a qui les necessita.",
@@ -1010,9 +1015,9 @@ ca:{
   nou_badge:"Nou · Temporada 2026–27",
   comp_label:"Club federat",comp_title:"Competició <span class=\"y\">oficial</span>",
   comp_p1:"El Club TT Joves Castelldefels participa en totes les competicions oficials de la Federació Catalana de Tennis Taula (FCTT). Aquesta temporada l'equip masculí ha aconseguit l'ascens a 2ª Nacional i el club estrena equip femení a 1ª Nacional.",
-  comp_p2:"La Lliga Interna del club, amb sistema de ranking ELO, arrenca a partir de setembre.",
+  comp_p2:"El TT Circuit, el circuit obert del club amb ranking ELO, ja ha començat: la 1a jornada es va jugar el 24 d'octubre i la propera és el 14 de novembre.",
   comp_i0:"Equip Femení",comp_i0s:"1ª Nacional",comp_i1:"Lligues FCTT",comp_i1s:"Competició federada per equips",comp_i2:"Open Catalunya",comp_i2s:"Torneigs individuals oberts",
-  comp_i3:"Promeses",comp_i3s:"Categories de joves promeses",comp_i4:"Lliga Interna",comp_i4s:"Ranking ELO del club",
+  comp_i3:"Promeses",comp_i3s:"Categories de joves promeses",comp_i4:"TT Circuit",comp_i4s:"Circuit obert amb ranking ELO",
   badge_active:"Actiu",badge_soon:"Setembre",
   club_label:"Qui som",club_title:"El <span class=\"y\">club</span>",
   club_p1:"El Club Tennis Taula Joves de Castelldefels és una entitat sense ànim de lucre que porta anys formant jugadors i jugadores de totes les edats al Baix Llobregat.",
@@ -1047,7 +1052,7 @@ es:{
   p3_tag:"Nivel 3 · Élite",p3_title:"Competición",p3_sub:"Jugadores federados FCTT",
   p3_desc:"Jugadores de rendimiento. Equipo ascendido a 2ª Nacional.",p3_time:"Ma · Mi · Vi 18:00–20:00",
   p4_tag:"Todos los niveles",p4_title:"Veteranos +65",p4_sub:"Institut Josep Lluís Sert",
-  p4_desc:"Entrenamiento técnico y juego en puntos para la categoría de jubilados.",p4_time:"Ma · Ju 16:15–17:30",p5_title:"Adultos",p5_sub:"Institut Josep Lluís Sert",p5_desc:"Entrenamiento técnico y ambiente de club para jugadores adultos.",p5_time:"Lu · Ju 19:30–21:00",p6_title:"Mujeres",p6_sub:"Institut Les Marines",p6_desc:"Grupo exclusivo para mujeres de todos los niveles. Un espacio propio, sin presión, donde aprender o mejorar el juego.",p6_time:"Vi 18:30–20:00",
+  p4_desc:"Entrenamiento técnico y juego en puntos para la categoría de jubilados.",p4_time:"Ma · Ju 16:15–17:30",p5_title:"Adultos",p5_sub:"Institut Josep Lluís Sert",p5_desc:"Entrenamiento técnico y ambiente de club para jugadores adultos.",p5_time:"Lu · Ju 19:30–21:00",p5_time2:"Ma · Mi 19:30–21:00",p5_new:"Nuevo grupo · 8 plazas",p6_title:"Mujeres",p6_sub:"Institut Les Marines",p6_desc:"Grupo exclusivo para mujeres de todos los niveles. Un espacio propio, sin presión, donde aprender o mejorar el juego.",p6_time:"Vi 18:30–20:00",
   lbl_horari:"Horario",lbl_lloc:"Lugar",lbl_preu:"Precio",loc_sert:"Institut Josep Lluís Sert",loc_marines:"Institut Les Marines",
   adapt_label:"Inclusión y comunidad",adapt_label_short:"Programas Adaptados",adapt_title:"Programas <span class=\"y\">adaptados</span>",
   adapt_desc:"El tenis de mesa como herramienta de actividad física, bienestar y cohesión social. Cuatro líneas especializadas, pensadas para quien las necesita.",
@@ -1058,9 +1063,9 @@ es:{
   nou_badge:"Nuevo · Temporada 2026–27",
   comp_label:"Club federado",comp_title:"Competición <span class=\"y\">oficial</span>",
   comp_p1:"El Club TT Joves Castelldefels participa en todas las competiciones oficiales de la Federació Catalana de Tennis Taula (FCTT). Esta temporada el equipo masculino ha logrado el ascenso a 2ª Nacional y el club estrena equipo femenino en 1ª Nacional.",
-  comp_p2:"La Liga Interna del club, con sistema de ranking ELO, arranca a partir de septiembre.",
+  comp_p2:"El TT Circuit, el circuito abierto del club con ranking ELO, ya ha empezado: la 1.ª jornada se jugó el 24 de octubre y la próxima es el 14 de noviembre.",
   comp_i0:"Equipo Femenino",comp_i0s:"1ª Nacional",comp_i1:"Ligas FCTT",comp_i1s:"Competición federada por equipos",comp_i2:"Open Catalunya",comp_i2s:"Torneos individuales abiertos",
-  comp_i3:"Promesas",comp_i3s:"Categorías de jóvenes promesas",comp_i4:"Liga Interna",comp_i4s:"Ranking ELO del club",
+  comp_i3:"Promesas",comp_i3s:"Categorías de jóvenes promesas",comp_i4:"TT Circuit",comp_i4s:"Circuito abierto con ranking ELO",
   badge_active:"Activo",badge_soon:"Septiembre",
   club_label:"Quiénes somos",club_title:"El <span class=\"y\">club</span>",
   club_p1:"El Club Tennis Taula Joves de Castelldefels es una entidad sin ánimo de lucro que lleva años formando jugadores y jugadoras de todas las edades en el Baix Llobregat.",
@@ -1095,7 +1100,7 @@ en:{
   p3_tag:"Level 3 · Elite",p3_title:"Competition",p3_sub:"FCTT federated players",
   p3_desc:"High-performance players. Team promoted to Spain's 2nd Division.",p3_time:"Tue · Wed · Fri 18:00–20:00",
   p4_tag:"All levels",p4_title:"Veterans +65",p4_sub:"Institut Josep Lluís Sert",
-  p4_desc:"Technical training and competitive rallies for the retirees category.",p4_time:"Tue · Thu 16:15–17:30",p5_title:"Adults",p5_sub:"Institut Josep Lluís Sert",p5_desc:"Technical training and club atmosphere for adult players.",p5_time:"Mon · Thu 19:30–21:00",p6_title:"Women",p6_sub:"Institut Les Marines",p6_desc:"Exclusive group for women of all levels. A space of their own, free of pressure, to learn or improve their game.",p6_time:"Fri 18:30–20:00",
+  p4_desc:"Technical training and competitive rallies for the retirees category.",p4_time:"Tue · Thu 16:15–17:30",p5_title:"Adults",p5_sub:"Institut Josep Lluís Sert",p5_desc:"Technical training and club atmosphere for adult players.",p5_time:"Mon · Thu 19:30–21:00",p5_time2:"Tue · Wed 19:30–21:00",p5_new:"New group · 8 places",p6_title:"Women",p6_sub:"Institut Les Marines",p6_desc:"Exclusive group for women of all levels. A space of their own, free of pressure, to learn or improve their game.",p6_time:"Fri 18:30–20:00",
   lbl_horari:"Schedule",lbl_lloc:"Location",lbl_preu:"Price",loc_sert:"Institut Josep Lluís Sert",loc_marines:"Institut Les Marines",
   adapt_label:"Inclusion & community",adapt_label_short:"Adapted Programs",adapt_title:"Adapted <span class=\"y\">programs</span>",
   adapt_desc:"Table tennis as a tool for physical activity, wellbeing and social cohesion. Four specialized programs, designed for those who need them.",
@@ -1106,9 +1111,9 @@ en:{
   nou_badge:"New · 2026–27 Season",
   comp_label:"Federated club",comp_title:"Official <span class=\"y\">competition</span>",
   comp_p1:"TT Joves Castelldefels takes part in every official competition run by the Catalan Table Tennis Federation (FCTT). This season the men's team earned promotion to Spain's 2nd Division and the club debuts a women's team in the 1st Division.",
-  comp_p2:"The club's Internal League, with an ELO ranking system, launches in September.",
+  comp_p2:"The TT Circuit, the club's open circuit with an ELO ranking, has started: the 1st matchday was played on 24 October and the next is on 14 November.",
   comp_i0:"Women's Team",comp_i0s:"1st Division",comp_i1:"FCTT Leagues",comp_i1s:"Federated team competition",comp_i2:"Open Catalunya",comp_i2s:"Open individual tournaments",
-  comp_i3:"Promeses",comp_i3s:"Youth talent categories",comp_i4:"Internal League",comp_i4s:"Club ELO ranking",
+  comp_i3:"Promeses",comp_i3s:"Youth talent categories",comp_i4:"TT Circuit",comp_i4s:"Open circuit with ELO ranking",
   badge_active:"Active",badge_soon:"September",
   club_label:"About us",club_title:"The <span class=\"y\">club</span>",
   club_p1:"Club Tennis Taula Joves de Castelldefels is a non-profit organization that has spent years training players of all ages across Baix Llobregat.",
@@ -1143,7 +1148,7 @@ de:{
   p3_tag:"Stufe 3 · Elite",p3_title:"Wettkampf",p3_sub:"FCTT-Verbandsspieler",
   p3_desc:"Leistungsspieler. Aufstieg in die 2. Liga.",p3_time:"Di · Mi · Fr 18:00–20:00",
   p4_tag:"Alle Stufen",p4_title:"Veteranen +65",p4_sub:"Institut Josep Lluís Sert",
-  p4_desc:"Technisches Training für die Rentner-Kategorie.",p4_time:"Di · Do 16:15–17:30",p5_title:"Erwachsene",p5_sub:"Institut Josep Lluís Sert",p5_desc:"Technisches Training und Vereinsatmosphäre für erwachsene Spieler.",p5_time:"Mo · Do 19:30–21:00",p6_title:"Frauen",p6_sub:"Institut Les Marines",p6_desc:"Exklusive Gruppe für Frauen aller Spielstärken.",p6_time:"Fr 18:30–20:00",
+  p4_desc:"Technisches Training für die Rentner-Kategorie.",p4_time:"Di · Do 16:15–17:30",p5_title:"Erwachsene",p5_sub:"Institut Josep Lluís Sert",p5_desc:"Technisches Training und Vereinsatmosphäre für erwachsene Spieler.",p5_time:"Mo · Do 19:30–21:00",p5_time2:"Di · Mi 19:30–21:00",p5_new:"Neue Gruppe · 8 Plätze",p6_title:"Frauen",p6_sub:"Institut Les Marines",p6_desc:"Exklusive Gruppe für Frauen aller Spielstärken.",p6_time:"Fr 18:30–20:00",
   lbl_horari:"Zeiten",lbl_lloc:"Ort",lbl_preu:"Preis",loc_sert:"Institut Josep Lluís Sert",loc_marines:"Institut Les Marines",
   adapt_label:"Inklusion & Gemeinschaft",adapt_label_short:"Angepasste Programme",adapt_title:"Angepasste <span class=\"y\">Programme</span>",
   adapt_desc:"Tischtennis als Werkzeug für Bewegung, Wohlbefinden und sozialen Zusammenhalt.",
@@ -1154,9 +1159,9 @@ de:{
   nou_badge:"Neu · Saison 2026–27",
   comp_label:"Verbandsverein",comp_title:"Offizieller <span class=\"y\">Wettkampf</span>",
   comp_p1:"TT Joves Castelldefels nimmt an allen offiziellen Wettbewerben des katalanischen Tischtennisverbands (FCTT) teil. Diese Saison ist die Herrenmannschaft in die 2. Liga aufgestiegen, und der Verein stellt erstmals eine Damenmannschaft in der 1. Liga.",
-  comp_p2:"Die interne Vereinsliga mit ELO-Ranking startet im September.",
+  comp_p2:"Der TT Circuit, die offene Serie des Vereins mit ELO-Ranking, hat begonnen: Der 1. Spieltag fand am 24. Oktober statt, der nächste ist am 14. November.",
   comp_i0:"Damenmannschaft",comp_i0s:"1. Liga",comp_i1:"FCTT-Ligen",comp_i1s:"Verbands-Mannschaftswettkampf",comp_i2:"Open Catalunya",comp_i2s:"Offene Einzelturniere",
-  comp_i3:"Promeses",comp_i3s:"Nachwuchskategorien",comp_i4:"Interne Liga",comp_i4s:"Vereins-ELO-Ranking",
+  comp_i3:"Promeses",comp_i3s:"Nachwuchskategorien",comp_i4:"TT Circuit",comp_i4s:"Offene Serie mit ELO-Ranking",
   badge_active:"Aktiv",badge_soon:"September",
   club_label:"Über uns",club_title:"Der <span class=\"y\">Verein</span>",
   club_p1:"Der Club Tennis Taula Joves de Castelldefels ist ein gemeinnütziger Verein, der seit Jahren Spielerinnen und Spieler jeden Alters im Baix Llobregat ausbildet.",
@@ -1191,7 +1196,7 @@ fr:{
   p3_tag:"Niveau 3 · Élite",p3_title:"Compétition",p3_sub:"Joueurs licenciés FCTT",
   p3_desc:"Joueurs de haut niveau. Promotion en 2ème Division.",p3_time:"Ma · Me · Ve 18:00–20:00",
   p4_tag:"Tous niveaux",p4_title:"Vétérans +65",p4_sub:"Institut Josep Lluís Sert",
-  p4_desc:"Entraînement technique pour la catégorie des retraités.",p4_time:"Ma · Je 16:15–17:30",p5_title:"Adultes",p5_sub:"Institut Josep Lluís Sert",p5_desc:"Entraînement technique et ambiance de club pour les joueurs adultes.",p5_time:"Lu · Je 19:30–21:00",p6_title:"Femmes",p6_sub:"Institut Les Marines",p6_desc:"Groupe exclusif pour les femmes de tous niveaux.",p6_time:"Ve 18:30–20:00",
+  p4_desc:"Entraînement technique pour la catégorie des retraités.",p4_time:"Ma · Je 16:15–17:30",p5_title:"Adultes",p5_sub:"Institut Josep Lluís Sert",p5_desc:"Entraînement technique et ambiance de club pour les joueurs adultes.",p5_time:"Lu · Je 19:30–21:00",p5_time2:"Ma · Me 19:30–21:00",p5_new:"Nouveau groupe · 8 places",p6_title:"Femmes",p6_sub:"Institut Les Marines",p6_desc:"Groupe exclusif pour les femmes de tous niveaux.",p6_time:"Ve 18:30–20:00",
   lbl_horari:"Horaires",lbl_lloc:"Lieu",lbl_preu:"Prix",loc_sert:"Institut Josep Lluís Sert",loc_marines:"Institut Les Marines",
   adapt_label:"Inclusion & communauté",adapt_label_short:"Programmes Adaptés",adapt_title:"Programmes <span class=\"y\">adaptés</span>",
   adapt_desc:"Le tennis de table comme outil d'activité physique, de bien-être et de cohésion sociale.",
@@ -1202,9 +1207,9 @@ fr:{
   nou_badge:"Nouveau · Saison 2026–27",
   comp_label:"Club fédéré",comp_title:"Compétition <span class=\"y\">officielle</span>",
   comp_p1:"TT Joves Castelldefels participe à toutes les compétitions officielles de la fédération catalane (FCTT). Cette saison, l'équipe masculine est montée en 2ème Division et le club présente pour la première fois une équipe féminine en 1ère Division.",
-  comp_p2:"La Ligue Interne du club, avec classement ELO, démarre en septembre.",
+  comp_p2:"Le TT Circuit, le circuit ouvert du club avec classement ELO, a commencé : la 1re journée s'est jouée le 24 octobre et la prochaine a lieu le 14 novembre.",
   comp_i0:"Équipe Féminine",comp_i0s:"1ère Division",comp_i1:"Ligues FCTT",comp_i1s:"Compétition fédérée par équipes",comp_i2:"Open Catalunya",comp_i2s:"Tournois individuels ouverts",
-  comp_i3:"Promeses",comp_i3s:"Catégories jeunes talents",comp_i4:"Ligue Interne",comp_i4s:"Classement ELO du club",
+  comp_i3:"Promeses",comp_i3s:"Catégories jeunes talents",comp_i4:"TT Circuit",comp_i4s:"Circuit ouvert avec classement ELO",
   badge_active:"Actif",badge_soon:"Septembre",
   club_label:"Qui sommes-nous",club_title:"Le <span class=\"y\">club</span>",
   club_p1:"Le Club Tennis Taula Joves de Castelldefels est une association à but non lucratif qui forme depuis des années des joueurs et joueuses de tous âges dans le Baix Llobregat.",
@@ -1240,7 +1245,7 @@ zh:{
   p3_tag:"3级 · 精英",p3_title:"比赛组",p3_sub:"FCTT注册球员",
   p3_desc:"高水平球员，一线队已升级。",p3_time:"周二 · 周三 · 周五 18:00–20:00",
   p4_tag:"所有级别",p4_title:"老将 +65",p4_sub:"Institut Josep Lluís Sert",
-  p4_desc:"面向退休组别的技术训练。",p4_time:"周二 · 周四 16:15–17:30",p5_title:"成人组",p5_sub:"Institut Josep Lluís Sert",p5_desc:"面向成人球员的技术训练与俱乐部氛围。",p5_time:"周一 · 周四 19:30–21:00",p6_title:"女性小组",p6_sub:"Institut Les Marines",p6_desc:"专为各水平女性设立的专属小组，自由无压力地学习和提升。",p6_time:"周五 18:30–20:00",
+  p4_desc:"面向退休组别的技术训练。",p4_time:"周二 · 周四 16:15–17:30",p5_title:"成人组",p5_sub:"Institut Josep Lluís Sert",p5_desc:"面向成人球员的技术训练与俱乐部氛围。",p5_time:"周一 · 周四 19:30–21:00",p5_time2:"周二 · 周三 19:30–21:00",p5_new:"新增小组 · 8个名额",p6_title:"女性小组",p6_sub:"Institut Les Marines",p6_desc:"专为各水平女性设立的专属小组，自由无压力地学习和提升。",p6_time:"周五 18:30–20:00",
   lbl_horari:"时间",lbl_lloc:"地点",lbl_preu:"价格",loc_sert:"Institut Josep Lluís Sert",loc_marines:"Institut Les Marines",
   adapt_label:"融合与社区",adapt_label_short:"适应性项目",adapt_title:"<span class=\"y\">适应性</span>项目",
   adapt_desc:"以乒乓球作为促进身体活动、健康和社会凝聚力的工具。",
@@ -1251,9 +1256,9 @@ zh:{
   nou_badge:"新 · 2026–27赛季",
   comp_label:"注册俱乐部",comp_title:"<span class=\"y\">官方</span>比赛",
   comp_p1:"TT Joves Castelldefels参加加泰罗尼亚乒乓球联合会（FCTT）的所有官方比赛。本赛季男队成功升入西班牙乙级联赛，俱乐部同时首次组建女子队并直接参加西班牙甲级联赛。",
-  comp_p2:"俱乐部内部联赛（ELO排名系统）将于九月开始。",
+  comp_p2:"俱乐部带ELO排名的公开赛事TT Circuit已经开赛：第1轮于10月24日举行，下一轮在11月14日。",
   comp_i0:"女子队",comp_i0s:"西班牙甲级联赛",comp_i1:"FCTT联赛",comp_i1s:"注册团体比赛",comp_i2:"Open Catalunya",comp_i2s:"公开个人赛事",
-  comp_i3:"青年组",comp_i3s:"青年人才组别",comp_i4:"内部联赛",comp_i4s:"俱乐部ELO排名",
+  comp_i3:"青年组",comp_i3s:"青年人才组别",comp_i4:"TT Circuit",comp_i4s:"带ELO排名的公开赛事",
   badge_active:"进行中",badge_soon:"九月",
   club_label:"关于我们",club_title:"<span class=\"y\">俱乐部</span>简介",
   club_p1:"TT Joves Castelldefels乒乓球俱乐部是一家非营利组织，多年来一直在Baix Llobregat地区培养各年龄段的球员。",
