@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preinscripció 2026–27 — TT Joves Castelldefels</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--purple:#7B2FBE;--purple-light:#A15FE0;--yellow:#F5C518;--black:#0A0A0B;--charcoal:#151517;--charcoal2:#1C1C1F;--white:#F7F7F5;--muted:rgba(247,247,245,.72);--muted2:rgba(247,247,245,.5);--line:rgba(247,247,245,.15);--line-strong:rgba(247,247,245,.28);--red:#ff6b6b;--green:#5ee09a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--black);color:var(--white);line-height:1.6;-webkit-text-size-adjust:100%}
+h1,h2{font-family:'Bebas Neue',sans-serif;letter-spacing:.5px}
+a{color:var(--purple-light)}
+.wrap{max-width:780px;margin:0 auto;padding:34px 18px 90px}
+.back{display:inline-block;margin-bottom:22px;color:var(--muted);text-decoration:none;font-size:14px}
+.back:hover{color:var(--yellow)}
+h1{font-size:46px;line-height:1.05;margin-bottom:8px}
+h1 .y{color:var(--yellow)}
+.lead{color:var(--muted);font-weight:300;margin-bottom:26px;font-size:15px}
+.need{background:var(--charcoal2);border-left:3px solid var(--yellow);padding:14px 18px;font-size:14px;color:var(--muted);margin-bottom:30px}
+.need b{color:var(--white)}
+fieldset{border:1px solid var(--line);background:var(--charcoal);padding:22px 20px 8px;margin-bottom:22px;border-radius:6px}
+legend{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.5px;color:var(--yellow);padding:0 8px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0 16px}
+@media(max-width:620px){.row,.row3{grid-template-columns:1fr}h1{font-size:38px}}
+.f{margin-bottom:16px}
+label.l{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.2px}
+label.l .req{color:var(--yellow)}
+input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{width:100%;background:var(--black);border:1px solid var(--line-strong);color:var(--white);padding:12px 13px;border-radius:5px;font:inherit;font-size:16px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--purple-light);outline-offset:1px}
+.hint{font-size:12px;color:var(--muted2);margin-top:5px}
+.err{color:var(--red);font-size:12.5px;margin-top:5px;display:none}
+.f.bad .err{display:block}
+.f.bad input,.f.bad select{border-color:var(--red)}
+.groups{display:grid;gap:10px;margin-bottom:14px}
+.g{border:1px solid var(--line-strong);border-radius:6px;padding:14px 16px;cursor:pointer;background:var(--black);display:block}
+.g:hover{border-color:var(--purple-light)}
+.g.sel{border-color:var(--yellow);background:rgba(245,197,24,.06)}
+.g input{margin-right:10px;accent-color:var(--yellow)}
+.g .gt{font-weight:700}
+.g .gm{font-size:12.5px;color:var(--muted);margin-left:26px}
+.g .gp{font-size:12.5px;color:var(--yellow);margin-left:26px;font-weight:600}
+.days{margin:10px 0 2px 26px;display:none;gap:8px;flex-wrap:wrap}
+.g.sel .days{display:flex}
+.day{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line-strong);border-radius:20px;padding:6px 13px;font-size:13px;cursor:pointer;background:var(--charcoal2)}
+.day input{margin:0;accent-color:var(--yellow)}
+.day.off{opacity:.45;cursor:not-allowed;text-decoration:line-through}
+.dayhint{margin-left:26px;font-size:12px;color:var(--muted2)}
+.chk{display:flex;gap:11px;align-items:flex-start;margin-bottom:14px;font-size:13.5px;color:var(--muted);font-weight:300}
+.chk input{margin-top:4px;accent-color:var(--yellow);width:18px;height:18px;flex:0 0 auto}
+.chk b{color:var(--white);font-weight:600}
+.opt{display:flex;gap:18px;margin-top:6px}
+.opt label{display:flex;gap:7px;align-items:center;font-size:14px}
+.opt input{accent-color:var(--yellow);width:17px;height:17px}
+.photo{border:1px dashed var(--line-strong);border-radius:6px;padding:14px;margin-bottom:14px;background:var(--black)}
+.photo .pt{font-size:13px;font-weight:600;margin-bottom:8px}
+.photo input[type=file]{display:none}
+.pbtn{display:inline-block;background:var(--charcoal2);border:1px solid var(--line-strong);color:var(--white);padding:9px 15px;border-radius:5px;font-size:13.5px;font-weight:600;cursor:pointer}
+.pbtn:hover{border-color:var(--yellow)}
+.pprev{display:none;margin-top:10px;align-items:center;gap:12px}
+.pprev img{height:70px;border-radius:4px;border:1px solid var(--line-strong)}
+.pprev button{background:none;border:none;color:var(--red);cursor:pointer;font-size:13px;text-decoration:underline}
+.photo.bad{border-color:var(--red)}
+.photo .err{display:none}.photo.bad .err{display:block}
+#sig{width:100%;height:160px;background:#fff;border-radius:5px;touch-action:none;display:block}
+.sigbar{display:flex;justify-content:space-between;align-items:center;margin-top:6px;font-size:12px;color:var(--muted2)}
+.sigbar button{background:none;border:none;color:var(--purple-light);cursor:pointer;font-size:13px;text-decoration:underline}
+.summary{background:var(--charcoal2);border:1px solid var(--line);border-radius:6px;padding:14px 16px;margin:6px 0 20px;font-size:14px;color:var(--muted)}
+.summary b{color:var(--yellow)}
+.submit{width:100%;background:var(--yellow);color:#111;border:none;border-radius:5px;padding:16px;font:inherit;font-weight:800;font-size:16px;letter-spacing:.4px;cursor:pointer;text-transform:uppercase}
+.submit:disabled{opacity:.5;cursor:wait}
+.msg{margin-top:16px;padding:14px 16px;border-radius:6px;font-size:14px;display:none}
+.msg.ok{display:block;background:rgba(94,224,154,.1);border:1px solid var(--green);color:var(--green)}
+.msg.ko{display:block;background:rgba(255,107,107,.1);border:1px solid var(--red);color:var(--red)}
+.pend{background:rgba(245,197,24,.1);border:1px solid var(--yellow);color:var(--yellow);padding:12px 16px;border-radius:6px;margin-bottom:20px;font-size:14px;display:none}
+.hp{position:absolute;left:-9999px;opacity:0}
+.small{font-size:12.5px;color:var(--muted2);margin-top:14px}
+footer{border-top:1px solid var(--line);padding:24px;text-align:center;font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html#inscripcions">← Tornar a la web</a>
+  <h1>Preinscripció <span class="y">2026–27</span></h1>
+  <p class="lead">Omple el formulari i el club et confirmarà la plaça per correu. Primera sessió de prova gratuïta en tots els programes.</p>
+  <div class="need"><b>Abans de començar, tingues a mà:</b> DNI/NIE de l'alumne/a (si en té) i del pare/mare o tutor/a, la targeta sanitària CatSalut i l'IBAN per a la domiciliació. Hauràs d'adjuntar-ne una <b>foto clara</b> (pots fer-la amb el mòbil en aquest moment). Uns 10 minuts.</div>
+  <div class="pend" id="pend">Aquest formulari encara no està connectat. Si el veus així, avisa el club.</div>
+
+  <form id="form" novalidate autocomplete="on">
+    <input class="hp" type="text" name="web" id="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+    <fieldset>
+      <legend>1. Grup</legend>
+      <div class="groups" id="groups"></div>
+      <div class="f" id="f-grup"><div class="err" id="e-grup">Tria un grup i els dies.</div></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>2. Dades de l'alumne/a</legend>
+      <div class="row3">
+        <div class="f"><label class="l">Nom <span class="req">*</span></label><input type="text" id="nom" autocomplete="given-name"><div class="err">Obligatori</div></div>
+        <div class="f"><label class="l">Primer cognom <span class="req">*</span></label><input type="text" id="cognom1"><div class="err">Obligatori</div></div>
+        <div class="f"><label class="l">Segon cognom</label><input type="text" id="cognom2"></div>
+      </div>
+      <div class="row">
+        <div class="f"><label class="l">Data de naixement <span class="req">*</span></label><input type="date" id="naixement"><div class="err">Data no vàlida</div></div>
+        <div class="f"><label class="l">Sexe <span class="req">*</span></label>
+          <select id="sexe"><option value="">—</option><option value="M">Home</option><option value="F">Dona</option></select><div class="err">Obligatori</div></div>
+      </div>
+      <label class="chk" id="nodniwrap"><input type="checkbox" id="nodni"><span>L'alumne/a <b>no té DNI</b> (usarem el del pare/mare o tutor/a)</span></label>
+      <div class="row">
+        <div class="f" id="f-dni"><label class="l">DNI / NIE de l'alumne/a <span class="req">*</span></label><input type="text" id="dni" autocapitalize="characters"><div class="err">DNI/NIE no vàlid</div></div>
+        <div class="f"><label class="l">Targeta CatSalut (CIP) <span class="req">*</span></label><input type="text" id="catsalut" autocapitalize="characters"><div class="hint">El codi de la targeta sanitària. Si té mútua privada, escriu-ho (ex.: DKV).</div><div class="err">Obligatori</div></div>
+      </div>
+      <div class="f"><label class="l">Adreça (carrer i número) <span class="req">*</span></label><input type="text" id="adreca" autocomplete="street-address"><div class="err">Obligatori</div></div>
+      <div class="row3">
+        <div class="f"><label class="l">Codi postal <span class="req">*</span></label><input type="text" id="cp" inputmode="numeric" maxlength="5" autocomplete="postal-code"><div class="err">5 xifres</div></div>
+        <div class="f"><label class="l">Municipi <span class="req">*</span></label><input type="text" id="municipi" autocomplete="address-level2"><div class="err">Obligatori</div></div>
+        <div class="f"><label class="l">Província</label><input type="text" id="provincia" value="Barcelona"></div>
+      </div>
+      <div class="row">
+        <div class="f"><label class="l">Telèfon de l'alumne/a</label><input type="tel" id="tel" autocomplete="tel"></div>
+        <div class="f"><label class="l">Correu de l'alumne/a</label><input type="email" id="email"></div>
+      </div>
+    </fieldset>
+
+    <fieldset id="fs-tutor">
+      <legend>3. Pare, mare o tutor/a legal</legend>
+      <div class="hint" id="tutor-hint" style="margin:-4px 0 14px">Obligatori si l'alumne/a és menor d'edat.</div>
+      <div class="row">
+        <div class="f"><label class="l">Nom i cognoms <span class="req tr">*</span></label><input type="text" id="tutorNom"><div class="err">Obligatori</div></div>
+        <div class="f"><label class="l">Relació</label><select id="tutorRelacio"><option value="mare">Mare</option><option value="pare">Pare</option><option value="tutor">Tutor/a legal</option></select></div>
+      </div>
+      <div class="row3">
+        <div class="f" id="f-tutorDni"><label class="l">DNI / NIE <span class="req tr">*</span></label><input type="text" id="tutorDni" autocapitalize="characters"><div class="err">DNI/NIE no vàlid</div></div>
+        <div class="f"><label class="l">Telèfon <span class="req tr">*</span></label><input type="tel" id="tutorTel"><div class="err">Obligatori</div></div>
+        <div class="f"><label class="l">Correu electrònic <span class="req tr">*</span></label><input type="email" id="tutorEmail"><div class="err">Correu no vàlid</div></div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>4. Dades bancàries</legend>
+      <div class="hint" style="margin:-4px 0 14px">Per a la domiciliació dels rebuts mensuals.</div>
+      <div class="row">
+        <div class="f"><label class="l">Titular del compte <span class="req">*</span></label><input type="text" id="titular"><div class="err">Obligatori</div></div>
+        <div class="f" id="f-titularDni"><label class="l">DNI / NIE del titular <span class="req">*</span></label><input type="text" id="titularDni" autocapitalize="characters"><div class="err">DNI/NIE no vàlid</div></div>
+      </div>
+      <div class="f" id="f-iban"><label class="l">IBAN <span class="req">*</span></label><input type="text" id="iban" placeholder="ES00 0000 0000 0000 0000 0000" autocapitalize="characters"><div class="err">IBAN no vàlid. Comprova'l.</div></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>5. Fotografies</legend>
+      <div class="hint" style="margin:-4px 0 14px">Fes una foto nítida, amb tot el document visible. Es redueixen automàticament abans d'enviar-les.</div>
+      <div id="photos"></div>
+    </fieldset>
+
+    <fieldset>
+      <legend>6. Consentiments</legend>
+      <label class="chk"><input type="checkbox" id="c-tramits"><span><b>Tràmits federatius.</b> Autoritzo el club a gestionar la llicència federativa i l'assegurança esportiva (FCTT / RFETM) de l'alumne/a amb les dades facilitades, i a comunicar-les a la federació i a la mútua per a aquesta finalitat. <span style="color:var(--yellow)">*</span></span></label>
+      <div class="f"><label class="l">Cessió de drets d'imatge <span class="req">*</span></label>
+        <div class="hint" style="margin:0 0 6px">Fotos i vídeos d'activitats del club per a la web i les xarxes socials.</div>
+        <div class="opt"><label><input type="radio" name="imatge" value="SI"> Sí, ho autoritzo</label><label><input type="radio" name="imatge" value="NO"> No</label></div>
+        <div class="err" id="e-imatge">Tria una opció</div></div>
+      <div class="f"><label class="l">Comunicats del club (correu / WhatsApp) <span class="req">*</span></label>
+        <div class="opt"><label><input type="radio" name="comunicats" value="SI"> Sí</label><label><input type="radio" name="comunicats" value="NO"> No</label></div>
+        <div class="err" id="e-comunicats">Tria una opció</div></div>
+      <label class="chk"><input type="checkbox" id="c-rgpd"><span>He llegit i accepto la <a href="privacitat.html" target="_blank" rel="noopener">política de privacitat</a>. Les dades i documents s'usaran només per a la gestió de la inscripció, la llicència federativa, l'assegurança i el cobrament, i es conservaran el temps necessari. Pots exercir els teus drets escrivint a ettcastelldefels@gmail.com. <span style="color:var(--yellow)">*</span></span></label>
+      <label class="chk"><input type="checkbox" id="c-sepa"><span>Autoritzo el club a domiciliar al compte indicat la matrícula i les quotes mensuals del grup triat. <span style="color:var(--yellow)">*</span></span></label>
+      <div class="f" id="f-sig"><label class="l">Signatura del pare/mare o tutor/a (o de l'alumne/a si és major d'edat) <span class="req">*</span></label>
+        <canvas id="sig" width="720" height="260"></canvas>
+        <div class="sigbar"><span>Signa amb el dit o el ratolí</span><button type="button" id="sigclear">Esborrar</button></div>
+        <div class="err">Cal signar</div></div>
+      <div class="err" id="e-chk">Cal acceptar els consentiments obligatoris (*).</div>
+    </fieldset>
+
+    <div class="summary" id="summary" style="display:none"></div>
+    <button class="submit" id="submit" type="submit">Enviar preinscripció</button>
+    <div class="msg" id="msg"></div>
+    <p class="small">Les dades i documents s'envien de forma segura al club. Si tens qualsevol problema, escriu a <a href="mailto:ettcastelldefels@gmail.com">ettcastelldefels@gmail.com</a>.</p>
+  </form>
+</div>
+<footer>© 2026 TT JOVES CASTELLDEFELS · <a href="privacitat.html">Privacitat</a></footer>
+
+<script>
+// ====== CONFIGURACIÓ ======
+var CONFIG = {
+  SCRIPT_URL: 'PENDENT',            // URL de l'Apps Script (acabada en /exec)
+  TOKEN: 'ttj-2026-27-insc'          // ha de coincidir amb el del script
+};
+
+// ====== GRUPS ======
+// pick: nombre de dies a triar (1, 2, '1-2' o 'all')
+var GROUPS = [
+  {code:'EXTRA',name:'Extraescolar',place:'Institut Les Marines',desc:'Nens i nenes des de 6 anys · 1 dia a la setmana',mat:30,quota:25,days:['Dilluns','Dimarts','Dimecres','Dijous'],time:'16:45–17:45',pick:1},
+  {code:'TEC1',name:'Iniciació · Tecnificació 1',place:'Institut Les Marines',desc:'2 dies a la setmana obligatoris',mat:70,quota:46,days:['Dilluns','Dimarts','Dimecres','Dijous'],time:'18:00–19:30',pick:2},
+  {code:'TEC2',name:'Tecnificació 2',place:'Institut Josep Lluís Sert',desc:'Dilluns i dijous',mat:70,quota:46,days:['Dilluns','Dijous'],time:'17:45–19:15',pick:'all'},
+  {code:'COMP',name:'Competició',place:'Institut Josep Lluís Sert',desc:'Jugadors federats · la Direcció Tècnica confirma l\'assignació',mat:70,quota:52,days:['Dimarts','Dimecres','Divendres'],time:'18:00–20:00',pick:'all'},
+  {code:'ADU',name:'Adults',place:'Institut Josep Lluís Sert',desc:'1 o 2 dies a la setmana · 19:30–21:00',mat:70,quota:37,quota2:46,days:['Dilluns','Dimarts','Dimecres','Dijous'],full:['Dilluns','Dijous'],time:'19:30–21:00',pick:'1-2',note:'Dilluns i dijous complets. Nou grup de dimarts i dimecres (8 places).'},
+  {code:'VET',name:'Veterans +65',place:'Institut Josep Lluís Sert',desc:'1 dia a la setmana',mat:30,quota:20,days:['Dimarts','Dijous'],time:'16:15–17:30',pick:1},
+  {code:'DONES',name:'Dones',place:'Institut Les Marines',desc:'Grup exclusiu per a dones de tots els nivells',mat:30,quota:20,days:['Divendres'],time:'18:30–20:00',pick:'all'},
+  {code:'PKS',name:'Parkinson i Ictus',place:'Institut Les Marines',desc:'Programa adaptat',mat:30,quota:20,days:['Divendres'],time:'16:15–17:30',pick:'all'},
+  {code:'TEA',name:'Neurodesenvolupament (TEA)',place:'Institut Les Marines',desc:'Programa adaptat · amb ISTEA',mat:30,quota:20,days:['Divendres'],time:'17:30–18:30',pick:'all'}
+];
+var sel = {group:null, days:[]};
+var $ = function(id){return document.getElementById(id)};
+
+// ====== RENDER GRUPS ======
+(function(){
+  var box = $('groups');
+  GROUPS.forEach(function(g){
+    var lab = document.createElement('label'); lab.className='g'; lab.dataset.code=g.code;
+    var days = g.days.map(function(d){
+      var off = g.full && g.full.indexOf(d)>-1;
+      return '<label class="day'+(off?' off':'')+'"><input type="'+(g.pick==='all'?'checkbox':(g.pick===1?'radio':'checkbox'))+'" name="d-'+g.code+'" value="'+d+'"'+(off?' disabled':'')+(g.pick==='all'?' checked disabled':'')+'>'+d+(off?' (complet)':'')+'</label>';
+    }).join('');
+    var pickTxt = g.pick===1?'Tria 1 dia':g.pick===2?'Tria 2 dies':g.pick==='1-2'?'Tria 1 o 2 dies':'';
+    var price = 'Matrícula '+g.mat+' € · '+g.quota+' €/mes'+(g.quota2?' (1 dia) · '+g.quota2+' €/mes (2 dies)':'');
+    lab.innerHTML = '<input type="radio" name="grup" value="'+g.code+'"><span class="gt">'+g.name+'</span>'+
+      '<div class="gm">'+g.place+' · '+g.time+' · '+g.desc+'</div><div class="gp">'+price+'</div>'+
+      (g.note?'<div class="gm" style="color:var(--yellow)">'+g.note+'</div>':'')+
+      '<div class="days">'+days+'</div>'+(pickTxt?'<div class="dayhint" style="display:none">'+pickTxt+'</div>':'');
+    box.appendChild(lab);
+  });
+  box.addEventListener('change', function(e){
+    var lab = e.target.closest('.g'); if(!lab) return;
+    var code = lab.dataset.code;
+    if(e.target.name==='grup'){
+      sel.group = GROUPS.filter(function(g){return g.code===code})[0];
+      document.querySelectorAll('.g').forEach(function(x){x.classList.toggle('sel', x===lab); var h=x.querySelector('.dayhint'); if(h) h.style.display = x===lab?'block':'none'});
+    }
+    // limitar dies
+    var g = sel.group; if(!g) return;
+    var checked = [].slice.call(lab.querySelectorAll('.days input:checked'));
+    var max = g.pick===2?2:(g.pick==='1-2'?2:1);
+    if(g.pick!=='all' && g.pick!==1 && checked.length>max && e.target.type==='checkbox'){ e.target.checked=false; checked = [].slice.call(lab.querySelectorAll('.days input:checked')); }
+    sel.days = [].slice.call((document.querySelector('.g[data-code="'+g.code+'"]')).querySelectorAll('.days input:checked')).map(function(i){return i.value});
+    updateSummary();
+  });
+})();
+
+function feeInfo(){
+  var g = sel.group; if(!g) return null;
+  var quota = g.quota, tipus = g.code;
+  if(g.code==='ADU'){ quota = sel.days.length>=2 ? g.quota2 : g.quota; tipus = sel.days.length>=2 ? 'ADU' : 'ADU(1d)'; }
+  return {mat:g.mat, quota:quota, tipus:tipus};
+}
+function daysOk(){
+  var g = sel.group; if(!g) return false;
+  if(g.pick==='all') return true;
+  if(g.pick===1) return sel.days.length===1;
+  if(g.pick===2) return sel.days.length===2;
+  if(g.pick==='1-2') return sel.days.length>=1 && sel.days.length<=2;
+  return false;
+}
+function updateSummary(){
+  var s = $('summary'); var g = sel.group;
+  if(!g){ s.style.display='none'; return; }
+  var d = g.pick==='all'?g.days:sel.days; var f = feeInfo();
+  s.style.display='block';
+  s.innerHTML = '<b>'+g.name+'</b> · '+(d.length?d.join(' i '):'tria els dies')+' · '+g.time+'<br>Matrícula '+f.mat+' € · quota mensual '+f.quota+' €. <span style="color:var(--muted2)">El club et confirma l\'import definitiu (descomptes per germans, etc.).</span>';
+}
+
+// ====== FOTOS ======
+var PHOTOS = [
+  {id:'dniAlumneDavant', label:'DNI/NIE de l\'alumne/a · part davantera', show:function(){return !$('nodni').checked}},
+  {id:'dniAlumneDarrere',label:'DNI/NIE de l\'alumne/a · part posterior', show:function(){return !$('nodni').checked}},
+  {id:'catsalut',        label:'Targeta sanitària CatSalut de l\'alumne/a', show:function(){return true}},
+  {id:'dniTutorDavant',  label:'DNI/NIE del pare/mare o tutor/a · part davantera', show:function(){return needTutor()||$('nodni').checked}},
+  {id:'dniTutorDarrere', label:'DNI/NIE del pare/mare o tutor/a · part posterior', show:function(){return needTutor()||$('nodni').checked}}
+];
+var photoData = {};
+function renderPhotos(){
+  var box = $('photos'); box.innerHTML='';
+  PHOTOS.forEach(function(p){
+    if(!p.show()) return;
+    var d = document.createElement('div'); d.className='photo'; d.id='ph-'+p.id;
+    d.innerHTML = '<div class="pt">'+p.label+' <span style="color:var(--yellow)">*</span></div>'+
+      '<label class="pbtn" for="in-'+p.id+'">📷 Fer foto / triar imatge</label>'+
+      '<input type="file" id="in-'+p.id+'" accept="image/*">'+
+      '<div class="pprev" id="pv-'+p.id+'"><img alt=""><button type="button">Treure</button></div>'+
+      '<div class="err">Falta aquesta foto</div>';
+    box.appendChild(d);
+    var input = d.querySelector('input'), pv = d.querySelector('.pprev');
+    if(photoData[p.id]){ pv.style.display='flex'; pv.querySelector('img').src = photoData[p.id].url; }
+    input.addEventListener('change', function(){
+      var f = input.files[0]; if(!f) return;
+      compress(f).then(function(r){
+        photoData[p.id] = r; pv.style.display='flex'; pv.querySelector('img').src = r.url; d.classList.remove('bad');
+      }).catch(function(){ alert('No he pogut llegir aquesta imatge. Prova amb una altra foto.'); });
+    });
+    pv.querySelector('button').addEventListener('click', function(){ delete photoData[p.id]; input.value=''; pv.style.display='none'; });
+  });
+}
+function compress(file){
+  return new Promise(function(res, rej){
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function(){
+      var max = 1600, w = img.naturalWidth, h = img.naturalHeight, k = Math.min(1, max/Math.max(w,h));
+      var c = document.createElement('canvas'); c.width = Math.round(w*k); c.height = Math.round(h*k);
+      var x = c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(img,0,0,c.width,c.height);
+      var q = 0.78, data = c.toDataURL('image/jpeg', q);
+      while(data.length > 2.2*1024*1024*1.37/1.0 && q > 0.4){ q -= 0.1; data = c.toDataURL('image/jpeg', q); }
+      URL.revokeObjectURL(url);
+      res({data:data.split(',')[1], url:data, mime:'image/jpeg'});
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); rej(); };
+    img.src = url;
+  });
+}
+
+// ====== MENOR D'EDAT ======
+function age(){ var v=$('naixement').value; if(!v) return null; var b=new Date(v), n=new Date(); var a=n.getFullYear()-b.getFullYear(); var m=n.getMonth()-b.getMonth(); if(m<0||(m===0&&n.getDate()<b.getDate())) a--; return a; }
+function needTutor(){ var a=age(); return a===null || a<18; }
+function refreshTutor(){
+  var need = needTutor() || $('nodni').checked;
+  document.querySelectorAll('#fs-tutor .tr').forEach(function(s){ s.style.display = need?'inline':'none'; });
+  $('tutor-hint').textContent = need ? 'Obligatori: l\'alumne/a és menor d\'edat o no té DNI.' : 'Opcional (l\'alumne/a és major d\'edat).';
+  renderPhotos();
+}
+$('naixement').addEventListener('change', refreshTutor);
+$('nodni').addEventListener('change', function(){ $('f-dni').style.display = this.checked?'none':'block'; refreshTutor(); });
+
+// ====== VALIDACIONS ======
+function validDni(v){
+  v = (v||'').toUpperCase().replace(/[\s-]/g,'');
+  if(/^[0-9]{8}[A-Z]$/.test(v)) return 'TRWAGMYFPDXBNJZSQVHLCKE'[parseInt(v,10)%23]===v[8];
+  if(/^[XYZ][0-9]{7}[A-Z]$/.test(v)) return 'TRWAGMYFPDXBNJZSQVHLCKE'[parseInt(({X:'0',Y:'1',Z:'2'})[v[0]]+v.slice(1,8),10)%23]===v[8];
+  return false;
+}
+function validIban(v){
+  v = (v||'').replace(/\s+/g,'').toUpperCase();
+  if(!/^[A-Z]{2}[0-9A-Z]{13,32}$/.test(v)) return false;
+  if(v.slice(0,2)==='ES' && v.length!==24) return false;
+  var r = v.slice(4)+v.slice(0,4), n='';
+  for(var i=0;i<r.length;i++){ var c=r.charCodeAt(i); n += (c>=65)?(c-55):r[i]; }
+  var rem=0; for(var j=0;j<n.length;j+=7){ rem = parseInt(String(rem)+n.substr(j,7),10)%97; }
+  return rem===1;
+}
+function validEmail(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v); }
+function mark(id, ok){ var w=$(id).closest('.f'); if(w) w.classList.toggle('bad', !ok); return ok; }
+
+// ====== SIGNATURA ======
+var sig = $('sig'), sctx = sig.getContext('2d'), drawing=false, signed=false;
+sctx.lineWidth=3; sctx.lineCap='round'; sctx.strokeStyle='#111';
+function pos(e){ var r=sig.getBoundingClientRect(); return {x:(e.clientX-r.left)*sig.width/r.width, y:(e.clientY-r.top)*sig.height/r.height}; }
+sig.addEventListener('pointerdown', function(e){ drawing=true; sig.setPointerCapture(e.pointerId); var p=pos(e); sctx.beginPath(); sctx.moveTo(p.x,p.y); });
+sig.addEventListener('pointermove', function(e){ if(!drawing) return; var p=pos(e); sctx.lineTo(p.x,p.y); sctx.stroke(); signed=true; });
+['pointerup','pointercancel'].forEach(function(ev){ sig.addEventListener(ev, function(){ drawing=false; }); });
+$('sigclear').addEventListener('click', function(){ sctx.clearRect(0,0,sig.width,sig.height); signed=false; });
+
+// ====== AJUDES ======
+$('iban').addEventListener('input', function(){ var v=this.value.replace(/\s+/g,'').toUpperCase(); this.value = v.replace(/(.{4})/g,'$1 ').trim(); });
+$('titularDni').addEventListener('focus', function(){ if(!this.value){ var t = needTutor()||$('nodni').checked; this.value = t ? $('tutorDni').value : $('dni').value; var el=this; setTimeout(function(){ el.select(); },0); } });
+$('titular').addEventListener('focus', function(){ if(!this.value){ var t = needTutor()||$('nodni').checked; this.value = t ? $('tutorNom').value : ($('nom').value+' '+$('cognom1').value+' '+$('cognom2').value).replace(/\s+/g,' ').trim(); var el=this; setTimeout(function(){ el.select(); },0); } });
+
+// ====== ENVIAMENT ======
+var MONTHS = ['gen','febr','març','abr','maig','juny','jul','ago','sept','oct','nov','des'];
+function uid(){ return 'w' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+var submissionId = uid();
+function fmtDate(iso){ var p = iso.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+
+$('form').addEventListener('submit', function(ev){
+  ev.preventDefault();
+  var ok = true, first = null;
+  function chk(cond, id){ if(!cond){ ok=false; if(!first) first = $(id); } return cond; }
+  var tut = needTutor() || $('nodni').checked;
+  mark('nom', chk(!!$('nom').value.trim(),'nom'));
+  mark('cognom1', chk(!!$('cognom1').value.trim(),'cognom1'));
+  mark('naixement', chk(!!$('naixement').value && age()!==null && age()>=3 && age()<=100,'naixement'));
+  mark('sexe', chk(!!$('sexe').value,'sexe'));
+  if(!$('nodni').checked) mark('dni', chk(validDni($('dni').value),'dni'));
+  mark('catsalut', chk(!!$('catsalut').value.trim(),'catsalut'));
+  mark('adreca', chk(!!$('adreca').value.trim(),'adreca'));
+  mark('cp', chk(/^[0-9]{5}$/.test($('cp').value.trim()),'cp'));
+  mark('municipi', chk(!!$('municipi').value.trim(),'municipi'));
+  if(tut){
+    mark('tutorNom', chk(!!$('tutorNom').value.trim(),'tutorNom'));
+    mark('tutorDni', chk(validDni($('tutorDni').value),'tutorDni'));
+    mark('tutorTel', chk(!!$('tutorTel').value.trim(),'tutorTel'));
+    mark('tutorEmail', chk(validEmail($('tutorEmail').value),'tutorEmail'));
+  } else if($('tutorEmail').value) { mark('tutorEmail', chk(validEmail($('tutorEmail').value),'tutorEmail')); }
+  if(!$('tel').value.trim() && !(tut && $('tutorTel').value.trim()) && !(!tut && false)){ /* telèfon: n'hi ha prou amb un */ }
+  if(!tut) { /* adult: cal telèfon o correu propi */ chk(!!($('tel').value.trim()||$('email').value.trim()),'tel'); }
+  if($('email').value) mark('email', chk(validEmail($('email').value),'email'));
+  mark('titular', chk(!!$('titular').value.trim(),'titular'));
+  mark('titularDni', chk(validDni($('titularDni').value),'titularDni'));
+  mark('iban', chk(validIban($('iban').value),'iban'));
+  // grup
+  var gok = daysOk(); $('f-grup').classList.toggle('bad', !gok); chk(gok,'groups');
+  // fotos
+  PHOTOS.forEach(function(p){ if(!p.show()) return; var has = !!photoData[p.id]; var el=$('ph-'+p.id); if(el) el.classList.toggle('bad', !has); chk(has, 'ph-'+p.id); });
+  // consentiments
+  var radios = function(n){ var r=document.querySelector('input[name="'+n+'"]:checked'); return r?r.value:''; };
+  var imatge = radios('imatge'), comunicats = radios('comunicats');
+  $('e-imatge').style.display = imatge?'none':'block'; chk(!!imatge,'e-imatge');
+  $('e-comunicats').style.display = comunicats?'none':'block'; chk(!!comunicats,'e-comunicats');
+  var cok = $('c-tramits').checked && $('c-rgpd').checked && $('c-sepa').checked;
+  $('e-chk').style.display = cok?'none':'block'; chk(cok,'e-chk');
+  $('f-sig').classList.toggle('bad', !signed); chk(signed,'sig');
+  if(!ok){ if(first && first.scrollIntoView) first.scrollIntoView({behavior:'smooth', block:'center'}); showMsg('ko','Revisa els camps marcats en vermell.'); return; }
+
+  var g = sel.group, f = feeInfo(), n = new Date();
+  var dies = (g.pick==='all'?g.days:sel.days).join(' i ');
+  var fields = {
+    nom:$('nom').value.trim(), cognom1:$('cognom1').value.trim(), cognom2:$('cognom2').value.trim(),
+    naixement:fmtDate($('naixement').value), any:$('naixement').value.slice(0,4), sexe:$('sexe').value,
+    dni: $('nodni').checked ? '' : $('dni').value.toUpperCase().replace(/[\s-]/g,''),
+    catsalut:$('catsalut').value.trim().toUpperCase(),
+    adreca:$('adreca').value.trim(), cp:$('cp').value.trim(), municipi:$('municipi').value.trim(), provincia:$('provincia').value.trim(),
+    tel:$('tel').value.trim(), email:$('email').value.trim(),
+    tutorNom:$('tutorNom').value.trim(), tutorRelacio:$('tutorRelacio').value, tutorTel:$('tutorTel').value.trim(), tutorEmail:$('tutorEmail').value.trim(),
+    tutorDni:$('tutorDni').value.toUpperCase().replace(/[\s-]/g,''),
+    grup:g.code, grupCodi:g.code, grupNom:g.name, tipusQuota:f.tipus, dies:dies,
+    imports:{matricula:f.mat, quota:f.quota},
+    titular:$('titular').value.trim(), titularDni:$('titularDni').value.toUpperCase().replace(/[\s-]/g,''), iban:$('iban').value.replace(/\s+/g,'').toUpperCase(),
+    dataAlta: MONTHS[n.getMonth()]+'-'+String(n.getFullYear()).slice(2),
+    tramits:'SI', imatge:imatge, comunicats:comunicats,
+    observacions: $('nodni').checked ? 'Alumne/a sense DNI' : ''
+  };
+  var files = [];
+  var tag = (fields.cognom1+'_'+fields.nom).replace(/[^A-Za-z0-9]+/g,'_');
+  PHOTOS.forEach(function(p){ if(photoData[p.id]) files.push({name:p.id+'_'+tag+'.jpg', mime:'image/jpeg', data:photoData[p.id].data}); });
+  files.push({name:'signatura_'+tag+'.png', mime:'image/png', data:sig.toDataURL('image/png').split(',')[1]});
+
+  send({token:CONFIG.TOKEN, id:submissionId, hp:$('hp').value, fields:fields, files:files});
+});
+
+function showMsg(kind, html){ var m=$('msg'); m.className='msg '+kind; m.innerHTML=html; }
+function send(payload){
+  var btn = $('submit'); btn.disabled = true; btn.textContent = 'Enviant… no tanquis la pàgina';
+  showMsg('ok','Enviant les dades i les fotos. Pot trigar uns segons…');
+  var mock = /[?&]mock=1/.test(location.search);
+  var p;
+  if(mock){ p = new Promise(function(r){ setTimeout(function(){ window.__lastPayload = payload; r({ok:true, ref:payload.id}); }, 600); }); }
+  else if(CONFIG.SCRIPT_URL==='PENDENT'){ p = Promise.resolve({ok:false, error:'pendent'}); }
+  else {
+    p = fetch(CONFIG.SCRIPT_URL, {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload)}).then(function(r){ return r.json(); });
+  }
+  p.then(function(r){
+    if(r && r.ok){
+      $('form').querySelectorAll('input,select,button').forEach(function(x){ x.disabled = true; });
+      showMsg('ok','<b>Preinscripció enviada!</b> Hem rebut les teves dades. El club et confirmarà la plaça per correu en uns dies. Referència: <b>'+(r.ref||'')+'</b>');
+      btn.textContent = 'Enviada'; window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
+    } else { fail(); }
+  }).catch(fail);
+  function fail(){
+    btn.disabled=false; btn.textContent='Enviar preinscripció';
+    showMsg('ko','No s\'ha pogut enviar. Comprova la connexió i torna-ho a provar. Si segueix fallant, escriu-nos a <a href="mailto:ettcastelldefels@gmail.com">ettcastelldefels@gmail.com</a>. Les dades no s\'han perdut: no tanquis aquesta pàgina.');
+  }
+}
+
+if(CONFIG.SCRIPT_URL==='PENDENT' && !/[?&]mock=1/.test(location.search)) $('pend').style.display='block';
+refreshTutor();
+</script>
+</body>
+</html>
