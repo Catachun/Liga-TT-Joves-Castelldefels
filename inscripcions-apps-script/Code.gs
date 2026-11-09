@@ -11,7 +11,7 @@
  */
 
 // ====== CONFIGURACIÓ ======
-var SHEET_ID = '1rcW_VwK62GzlQhgTHIwblCYkjiNmSLqmf5dmtA7nSZg'; // JOVES_BD_2627 (full de la Kim). Buit = es crea un full nou.
+var SHEET_ID = ''; // Buit = el script crea un full nou la primera vegada i se'n recorda (PropertiesService).
 var TAB_NAME = 'WEB_ENTRADES';
 var ROOT_FOLDER_NAME = 'INSCRIPCIONS WEB 2026-27';
 var NOTIFY_EMAIL = 'ettcastelldefels@gmail.com';
@@ -34,6 +34,7 @@ function doPost(e) {
     var p = JSON.parse(e.postData.contents);
     if (p.token !== TOKEN) return json_({ ok: false, error: 'token' });
     if (p.hp) return json_({ ok: true, ref: 'ok' }); // anti-spam (camp ocult)
+    if (p.tipus === 'federacio') return federacio_(p);
     var f = p.fields || {};
     var files = p.files || [];
     if (!f.nom || !f.cognom1 || !f.grup) return json_({ ok: false, error: 'dades' });
@@ -108,9 +109,66 @@ function doPost(e) {
   }
 }
 
+
+// ====== Sol·licituds de federació (TT Circuit) ======
+var FED_TAB = 'SOLICITUDS_FEDERACIO';
+var FED_HEADERS = ['SIT','Enviat el','Nom i cognoms','Data naixement','DNI / NIE','Adreça','e-mail','Telèfon','Menor d\'edat','Tutor/a (nom)','Tutor/a (DNI)','Club actual','Tràmit FCTT','Imatge','Carpeta fotos (Drive)','Observacions','ID enviament'];
+
+function federacio_(p) {
+  var f = p.fields || {};
+  var files = p.files || [];
+  if (!f.nom || !f.dni || !f.email) return json_({ ok: false, error: 'dades' });
+  if (files.length > MAX_FILES) return json_({ ok: false, error: 'fitxers' });
+  var ss = getSs_();
+  var sh = ss.getSheetByName(FED_TAB);
+  if (!sh) {
+    sh = ss.insertSheet(FED_TAB);
+    sh.getRange(1, 1, 1, FED_HEADERS.length).setValues([FED_HEADERS]).setFontWeight('bold').setBackground('#F5C518');
+    sh.setFrozenRows(1);
+  }
+  var last = sh.getLastRow();
+  if (p.id && last > 1) {
+    var ids = sh.getRange(2, FED_HEADERS.length, last - 1, 1).getValues();
+    for (var i = 0; i < ids.length; i++) if (String(ids[i][0]) === String(p.id)) return json_({ ok: true, ref: p.id, dup: true });
+  }
+  var root = getRootFolder_();
+  var sub = root.getFoldersByName('FEDERACIO TT CIRCUIT');
+  var fedRoot = sub.hasNext() ? sub.next() : root.createFolder('FEDERACIO TT CIRCUIT');
+  var folder = fedRoot.createFolder(clean_(f.nom) + ' (' + (f.naixement || '') + ')');
+  files.forEach(function (fl) {
+    var bytes = Utilities.base64Decode(fl.data);
+    if (bytes.length > MAX_FILE_BYTES) return;
+    folder.createFile(Utilities.newBlob(bytes, fl.mime || 'image/jpeg', clean_(fl.name || 'fitxer')));
+  });
+  var row = rowNumber_(sh);
+  var out = ['NOVA', Utilities.formatDate(new Date(), 'Europe/Madrid', 'dd/MM/yyyy HH:mm'), f.nom || '', f.naixement || '', f.dni || '', f.adreca || '', f.email || '', f.tel || '', f.menor || '', f.tutorNom || '', f.tutorDni || '', f.club || '', f.tramits || '', f.imatge || '', folder.getUrl(), f.observacions || '', p.id || ''];
+  sh.getRange(row, 1, 1, out.length).setNumberFormat('@');
+  sh.getRange(row, 1, 1, out.length).setValues([out]);
+  try {
+    MailApp.sendEmail({
+      to: NOTIFY_EMAIL,
+      subject: 'Nova sol·licitud de federació (TT Circuit): ' + f.nom,
+      htmlBody: '<p>Nova sol·licitud de federació rebuda des de l\'app del TT Circuit.</p>' +
+        '<p><b>' + esc_(f.nom) + '</b> · ' + esc_(f.menor === 'SI' ? 'menor d\'edat' : 'major d\'edat') + '</p>' +
+        '<p><a href="' + folder.getUrl() + '">Documents i fotos (Drive)</a><br>' +
+        '<a href="' + ss.getUrl() + '#gid=' + sh.getSheetId() + '">Fila a la pestanya ' + FED_TAB + '</a></p>' +
+        '<p style="color:#888;font-size:12px">Per privacitat, aquest avís no inclou DNI.</p>'
+    });
+  } catch (mailErr) {}
+  return json_({ ok: true, ref: p.id || '' });
+}
+
 // ====== Auxiliars ======
+function getSs_() {
+  var props = PropertiesService.getScriptProperties();
+  var id = SHEET_ID || props.getProperty('SHEET_ID');
+  if (id) return SpreadsheetApp.openById(id);
+  var ss = SpreadsheetApp.create('INSCRIPCIONS WEB 2026-27');
+  props.setProperty('SHEET_ID', ss.getId());
+  return ss;
+}
 function getSheet_() {
-  var ss = SHEET_ID ? SpreadsheetApp.openById(SHEET_ID) : SpreadsheetApp.create('INSCRIPCIONS WEB 2026-27');
+  var ss = getSs_();
   var sh = ss.getSheetByName(TAB_NAME);
   if (!sh) {
     sh = ss.insertSheet(TAB_NAME);
@@ -133,6 +191,15 @@ function provaLocal() {
   var r = doPost({ postData: { contents: JSON.stringify({
     token: TOKEN, id: 'prova-' + Date.now(),
     fields: { nom: 'PROVA', cognom1: 'Prova', cognom2: 'Web', naixement: '01/01/2015', grup: 'ADU', grupCodi: 'ADU', grupNom: 'Adults', dies: 'Dimarts', imports: { matricula: 70, quota: 37 }, tramits: 'SI', imatge: 'NO', comunicats: 'SI' },
+    files: []
+  }) } });
+  Logger.log(r.getContent());
+}
+
+function provaFederacio() {
+  var r = doPost({ postData: { contents: JSON.stringify({
+    token: TOKEN, tipus: 'federacio', id: 'provafed-' + Date.now(),
+    fields: { nom: 'PROVA Federacio', naixement: '01/01/1990', dni: '00000000T', email: 'prova@example.com', menor: 'NO', club: 'Cap', tramits: 'SI', imatge: 'NO' },
     files: []
   }) } });
   Logger.log(r.getContent());
