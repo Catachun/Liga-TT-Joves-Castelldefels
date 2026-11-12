@@ -1,0 +1,54 @@
+name: Renovar token d'Instagram
+
+# Amplia el token d'Instagram uns 60 dies més, un cop al mes.
+# Si alguna cosa falla, GitHub envia un correu amb l'error i el token es pot
+# regenerar a mà (Meta for Developers) com sempre.
+
+on:
+  schedule:
+    - cron: '17 6 1 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ampliar el token
+        env:
+          IG_ACCESS_TOKEN: ${{ secrets.IG_ACCESS_TOKEN }}
+          GH_SECRETS_PAT: ${{ secrets.GH_SECRETS_PAT }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [ -z "${IG_ACCESS_TOKEN:-}" ]; then
+            echo "::error::Falta el secret IG_ACCESS_TOKEN."
+            exit 1
+          fi
+          resp=$(curl -sS -G "https://graph.instagram.com/refresh_access_token" \
+            --data-urlencode "grant_type=ig_refresh_token" \
+            --data-urlencode "access_token=${IG_ACCESS_TOKEN}") || {
+            echo "::error::No s'ha pogut contactar amb Instagram."
+            exit 1
+          }
+          new=$(echo "$resp" | jq -r '.access_token // empty')
+          secs=$(echo "$resp" | jq -r '.expires_in // empty')
+          if [ -z "$new" ]; then
+            echo "::error::Instagram no ha renovat el token: $(echo "$resp" | jq -c '.error // {}')"
+            echo "Cal regenerar-lo a mà a Meta for Developers i actualitzar el secret IG_ACCESS_TOKEN."
+            exit 1
+          fi
+          echo "::add-mask::$new"
+          echo "Token ampliat. Caduca d'aquí a $((secs / 86400)) dies."
+          if [ "$new" != "$IG_ACCESS_TOKEN" ]; then
+            if [ -z "${GH_SECRETS_PAT:-}" ]; then
+              echo "::error::Instagram ha tornat un token diferent i no hi ha GH_SECRETS_PAT per desar-lo. Regenera el token a mà (Meta for Developers) i actualitza IG_ACCESS_TOKEN."
+              exit 1
+            fi
+            GH_TOKEN="$GH_SECRETS_PAT" gh secret set IG_ACCESS_TOKEN --repo "$GH_REPO" --body "$new"
+            echo "Secret IG_ACCESS_TOKEN actualitzat."
+          else
+            echo "El token és el mateix; no cal desar res."
+          fi
