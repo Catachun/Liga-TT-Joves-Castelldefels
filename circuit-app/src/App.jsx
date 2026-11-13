@@ -222,6 +222,9 @@ function LoginScreen({ onLogin, jornadas }) {
   const [step, setStep] = useState("welcome"); // welcome -> email -> picker|new
   const [clubMember, setClubMember] = useState(false);
   const [joinNow, setJoinNow] = useState(true);
+  const [mode, setMode] = useState("new"); // new = vull apuntar-me, have = ja tinc perfil
+  const [done, setDone] = useState(null); // { player, joined }
+  const [showPhoto, setShowPhoto] = useState(false);
   const nextJ = pickNextJornada(jornadas);
   const nextJLocale = lang === "ca" ? "ca-ES" : lang === "es" ? "es-ES" : "en-GB";
   const nextJDate = nextJ ? new Date(nextJ.date + "T00:00:00").toLocaleDateString(nextJLocale, { weekday: "long", day: "numeric", month: "long" }) : "";
@@ -254,6 +257,23 @@ function LoginScreen({ onLogin, jornadas }) {
       setError(t("err_connection"));
     }
     setLoading(false);
+  };
+
+  const pickMember = async (m) => {
+    if (mode === "new" && canJoinNow && !(nextJ.participants || []).some((p) => p.playerId === m.id)) {
+      setLoading(true);
+      try {
+        await updateDoc(doc(db, "jornadas", nextJ.id), {
+          participants: arrayUnion({ playerId: m.id, confirmed: true, paid: false, joinedAt: Date.now() }),
+        });
+        setLoading(false);
+        setDone({ player: m, joined: true });
+        return;
+      } catch {
+        setLoading(false);
+      }
+    }
+    onLogin(m);
   };
 
   const submitNewProfile = async () => {
@@ -306,7 +326,9 @@ function LoginScreen({ onLogin, jornadas }) {
           // el perfil ja està creat; es podrà apuntar des de la jornada
         }
       }
-      onLogin({ id: docRef.id, ...newPlayer });
+      const created = { id: docRef.id, ...newPlayer };
+      if (joinNow && canJoinNow) setDone({ player: created, joined: true });
+      else onLogin(created);
     } catch {
       setError(t("err_connection"));
     }
@@ -325,7 +347,7 @@ function LoginScreen({ onLogin, jornadas }) {
       <h1>{t("login_title")}</h1>
       <p className="club-name">{t("club")}</p>
 
-      {step === "welcome" && (
+      {!done && step === "welcome" && (
         <div className="login-step welcome-card">
           <p className="welcome-what">{t("welcome_what")}</p>
           {nextJ && (
@@ -339,12 +361,20 @@ function LoginScreen({ onLogin, jornadas }) {
             </div>
           )}
           <p className="hint">{t("welcome_steps")}</p>
-          <button onClick={() => setStep("email")}>{nextJ && canJoinNow ? t("welcome_cta") : t("welcome_no_jornada_cta")}</button>
-          <button className="secondary" onClick={() => setStep("email")}>{t("welcome_have_profile")}</button>
+          <button onClick={() => { setMode("new"); setStep("email"); }}>{nextJ && canJoinNow ? t("welcome_cta") : t("welcome_no_jornada_cta")}</button>
+          <button className="secondary" onClick={() => { setMode("have"); setStep("email"); }}>{t("welcome_have_profile")}</button>
         </div>
       )}
 
-      {step === "email" && (
+      {done && (
+        <div className="login-step welcome-card">
+          <h2>{t("done_title", { name: done.player.name })}</h2>
+          {nextJ && <p className="welcome-what">{t("done_see_you", { date: nextJDate, start: nextJSchedule.start, venue: nextJVenue.name, price: JORNADA_PRICE })}</p>}
+          <button onClick={() => onLogin(done.player)}>{t("done_enter")}</button>
+        </div>
+      )}
+
+      {!done && step === "email" && (
         <div className="login-step">
           <input
             type="email"
@@ -360,12 +390,12 @@ function LoginScreen({ onLogin, jornadas }) {
         </div>
       )}
 
-      {step === "picker" && (
+      {!done && step === "picker" && (
         <div className="login-step">
-          <h2>{t("family_picker_title")}</h2>
+          <h2>{mode === "new" ? t("picker_title_join") : t("family_picker_title")}</h2>
           <div className="family-list">
             {familyMembers.map((m) => (
-              <button key={m.id} className="family-member" onClick={() => onLogin(m)}>
+              <button key={m.id} className="family-member" disabled={loading} onClick={() => pickMember(m)}>
                 {(m.selfieUrl || m.photoURL) && <img src={m.selfieUrl || m.photoURL} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} />}
                 <span style={{ flex: 1, textAlign: "left" }}>{m.name}</span>
                 {nextJ && (nextJ.participants || []).some((p) => p.playerId === m.id) && <small style={{ color: "#3ecf6e" }}>{t("picker_joined")}</small>}
@@ -383,7 +413,7 @@ function LoginScreen({ onLogin, jornadas }) {
         </div>
       )}
 
-      {step === "new" && (
+      {!done && step === "new" && (
         <div className="login-step">
           <h2>{t("new_profile_title")}</h2>
           <input
@@ -392,8 +422,12 @@ function LoginScreen({ onLogin, jornadas }) {
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          <SelfieCapture value={selfie} onChange={setSelfie} />
-          <p className="selfie-cta">{t("login_selfie_cta")}</p>
+          {canJoinNow && (
+            <label className="checkbox-line">
+              <input type="checkbox" checked={joinNow} onChange={(e) => setJoinNow(e.target.checked)} />
+              {t("join_with_profile", { date: nextJDate })}
+            </label>
+          )}
 
           <div className="federat-field">
             <label>{t("reg_federat_label")}</label>
@@ -448,16 +482,22 @@ function LoginScreen({ onLogin, jornadas }) {
             )}
           </div>
 
-          <label className="checkbox-line">
-            <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-            {t("login_consent")}
-          </label>
-          <p className="hint small">{t("login_consent_minor")}</p>
-          {canJoinNow && (
-            <label className="checkbox-line">
-              <input type="checkbox" checked={joinNow} onChange={(e) => setJoinNow(e.target.checked)} />
-              {t("join_with_profile", { date: nextJDate })}
-            </label>
+          {!showPhoto && !selfie ? (
+            <button type="button" className="secondary" onClick={() => setShowPhoto(true)}>{t("add_photo_optional")}</button>
+          ) : (
+            <>
+              <SelfieCapture value={selfie} onChange={setSelfie} />
+              <p className="selfie-cta">{t("login_selfie_cta")}</p>
+            </>
+          )}
+          {selfie && (
+            <>
+              <label className="checkbox-line">
+                <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+                {t("login_consent")}
+              </label>
+              <p className="hint small">{t("login_consent_minor")}</p>
+            </>
           )}
           {error && <p className="error">{error}</p>}
           <button disabled={loading} onClick={submitNewProfile}>
