@@ -367,12 +367,14 @@ function LoginScreen({ onLogin, jornadas }) {
             {familyMembers.map((m) => (
               <button key={m.id} className="family-member" onClick={() => onLogin(m)}>
                 {(m.selfieUrl || m.photoURL) && <img src={m.selfieUrl || m.photoURL} alt="" onError={(e) => { e.currentTarget.style.display = "none"; }} />}
-                <span>{m.name}</span>
+                <span style={{ flex: 1, textAlign: "left" }}>{m.name}</span>
+                {nextJ && (nextJ.participants || []).some((p) => p.playerId === m.id) && <small style={{ color: "#3ecf6e" }}>{t("picker_joined")}</small>}
               </button>
             ))}
           </div>
+          <p className="hint">{t("picker_hint")}</p>
           {familyMembers.length < 5 ? (
-            <button className="secondary" onClick={() => setStep("new")}>
+            <button onClick={() => setStep("new")}>
               {t("add_family_member")}
             </button>
           ) : (
