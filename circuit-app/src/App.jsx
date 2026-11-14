@@ -1281,7 +1281,14 @@ function GroupsView({ jornada, field, players, admin, player, bestOf, onSaveResu
   const groups = jornada[field] || [];
   const playerById = (id) => players.find((p) => p.id === id);
   const staff = admin?.type === "master" || admin?.type === "venue" || admin?.type === "referee";
-  const mine = (m) => !!player && (m.p1 === player.id || m.p2 === player.id);
+  // own matches, plus those of anyone who shares the family email (a parent can enter the children's results)
+  const mine = (m) => {
+    if (!player) return false;
+    if (m.p1 === player.id || m.p2 === player.id) return true;
+    const fam = (player.familyEmail || "").trim().toLowerCase();
+    if (!fam) return false;
+    return [m.p1, m.p2].some((id) => ((playerById(id)?.familyEmail) || "").trim().toLowerCase() === fam);
+  };
   const allComplete = groups.every((g) => groupComplete(g));
   const turnsTotal = Math.max(0, ...groups.flatMap((g) => g.matches.map((m) => m.turn || 0)));
 
@@ -1342,7 +1349,14 @@ function SwissView({ jornada, players, admin, player, bestOf, onSaveResult, onCl
   const rounds = jornada.swissRounds || [];
   const playerById = (id) => players.find((p) => p.id === id);
   const staff = admin?.type === "master" || admin?.type === "venue" || admin?.type === "referee";
-  const mine = (m) => !!player && (m.p1 === player.id || m.p2 === player.id);
+  // own matches, plus those of anyone who shares the family email (a parent can enter the children's results)
+  const mine = (m) => {
+    if (!player) return false;
+    if (m.p1 === player.id || m.p2 === player.id) return true;
+    const fam = (player.familyEmail || "").trim().toLowerCase();
+    if (!fam) return false;
+    return [m.p1, m.p2].some((id) => ((playerById(id)?.familyEmail) || "").trim().toLowerCase() === fam);
+  };
   const last = rounds[rounds.length - 1];
   const lastComplete = last ? last.matches.every((m) => m.done || m.bye) : false;
 
@@ -1406,7 +1420,14 @@ function BracketsView({ jornada, players, admin, player, bestOf, onSaveResult, o
   const { t } = useLang();
   const playerById = (id) => players.find((p) => p.id === id);
   const staff = admin?.type === "master" || admin?.type === "venue" || admin?.type === "referee";
-  const mine = (m) => !!player && (m.p1 === player.id || m.p2 === player.id);
+  // own matches, plus those of anyone who shares the family email (a parent can enter the children's results)
+  const mine = (m) => {
+    if (!player) return false;
+    if (m.p1 === player.id || m.p2 === player.id) return true;
+    const fam = (player.familyEmail || "").trim().toLowerCase();
+    if (!fam) return false;
+    return [m.p1, m.p2].some((id) => ((playerById(id)?.familyEmail) || "").trim().toLowerCase() === fam);
+  };
 
   const saveBracketMatch = async (bracketKey, matchId, s1, s2, sets) => {
     try {
