@@ -824,7 +824,24 @@ function JornadesTab({ player, players, jornadas, loadHistoric, admin }) {
 // Jornada detail — registration, quota panel, formats, rounds, closing
 // ---------------------------------------------------------------------------
 function JornadaDetail({ jornada, player, players, admin, onBack }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const [phaseSel, setPhaseSel] = useState(null);
+  // phases that already have data; the one in progress is shown by default, the others are read-only
+  const PH = {
+    ca: { grups: "Grups", grups2: "2a ronda", suis: "Suís", quadres: "Quadres", final: "Resultat final" },
+    es: { grups: "Grupos", grups2: "2ª ronda", suis: "Suizo", quadres: "Cuadros", final: "Resultado final" },
+    en: { grups: "Groups", grups2: "Round 2", suis: "Swiss", quadres: "Brackets", final: "Final result" },
+  }[lang] || {};
+  const phases = [
+    (jornada.groups || []).length > 0 && "grups",
+    (jornada.groupsR2 || []).length > 0 && "grups2",
+    (jornada.swissRounds || []).length > 0 && "suis",
+    jornada.bracketGold && "quadres",
+    jornada.status === "tancada" && jornada.podium && "final",
+  ].filter(Boolean);
+  const activePhase = { grups: "grups", grups_r1: "grups", grups_r2: "grups2", suis: "suis", eliminatories: "quadres", tancada: "final" }[jornada.status];
+  const view = phaseSel && phases.includes(phaseSel) ? phaseSel : activePhase;
+  const live = view === activePhase; // only the phase in progress is editable
   const [busy, setBusy] = useState(false);
   const rec = recommendTournament((jornada.participants || []).length);
   const [bestOfSel, setBestOfSel] = useState(null); // null = follow the recommendation
@@ -1221,7 +1238,15 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
         </div>
       )}
 
-      {(jornada.status === "grups" || jornada.status === "grups_r1" || jornada.status === "grups_r2") && (admin?.type === "master" || admin?.type === "venue") && (
+      {phases.length > 1 && (
+        <div className="phase-tabs">
+          {phases.map((ph) => (
+            <button key={ph} className={view === ph ? "active" : ""} onClick={() => setPhaseSel(ph)}>{PH[ph]}</button>
+          ))}
+        </div>
+      )}
+
+      {live && (jornada.status === "grups" || jornada.status === "grups_r1" || jornada.status === "grups_r2") && (admin?.type === "master" || admin?.type === "venue") && (
         <p className="hint small">
           <button className="secondary small" onClick={() => window.confirm("Reajustar torns, taules i àrbitres dels partits pendents? Els resultats no es toquen.") && rescheduleGroups()}>
             🔄 Reajustar calendari ({TABLES_AVAILABLE} taules)
@@ -1231,7 +1256,7 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
           )}
         </p>
       )}
-      {(jornada.status === "grups" || jornada.status === "grups_r1" || jornada.status === "grups_r2") && (
+      {(view === "grups" || view === "grups2") && live && (
         <GroupsView
           jornada={jornada}
           field={jornada.status === "grups_r2" ? "groupsR2" : "groups"}
@@ -1251,13 +1276,20 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
           onCloseNoBrackets={jornada.status === "grups_r2" ? closeJornada : null}
         />
       )}
-
-      {jornada.status === "suis" && (
-        <SwissView jornada={jornada} players={players} admin={admin} player={player} bestOf={jornada.bestOf || 5} onSaveResult={saveMatchResult} onClose={closeJornada} />
+      {(view === "grups" || view === "grups2") && !live && (
+        <GroupsView jornada={jornada} field={view === "grups2" ? "groupsR2" : "groups"} players={players} admin={null} player={null} bestOf={jornada.bestOf || 5} onSaveResult={() => {}} onNextStep={null} nextStepLabel="" onCloseNoBrackets={null} />
       )}
 
-      {jornada.status === "eliminatories" && (
-        <BracketsView jornada={jornada} players={players} admin={admin} player={player} bestOf={jornada.bestOf || 5} onSaveResult={saveMatchResult} onClose={closeJornada} />
+      {view === "suis" && (
+        live
+          ? <SwissView jornada={jornada} players={players} admin={admin} player={player} bestOf={jornada.bestOf || 5} onSaveResult={saveMatchResult} onClose={closeJornada} />
+          : <SwissView jornada={jornada} players={players} admin={null} player={null} bestOf={jornada.bestOf || 5} onSaveResult={() => {}} onClose={null} />
+      )}
+
+      {view === "quadres" && (
+        live
+          ? <BracketsView jornada={jornada} players={players} admin={admin} player={player} bestOf={jornada.bestOf || 5} onSaveResult={saveMatchResult} onClose={closeJornada} />
+          : <BracketsView jornada={jornada} players={players} admin={null} player={null} bestOf={jornada.bestOf || 5} onSaveResult={() => {}} onClose={null} />
       )}
 
       {jornada.status === "tancada" && !jornada.isTest && admin?.type === "master" && (
@@ -1265,7 +1297,7 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
           <button className="secondary small" disabled={busy} onClick={recalcClosedJornada}>♻️ Recalcular ELO d'aquesta jornada (regles noves)</button>
         </p>
       )}
-      {jornada.status === "tancada" && jornada.podium && (
+      {view === "final" && jornada.status === "tancada" && jornada.podium && (
         <PodiumView jornada={jornada} players={players} />
       )}
 
