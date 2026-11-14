@@ -952,6 +952,17 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
     });
   };
 
+  // Master only, before any match is played: remove groups/brackets and go back to sign-ups.
+  const undoTournament = async () => {
+    const played = [...(jornada.groups || []), ...(jornada.groupsR2 || [])].some((g) => (g.matches || []).some((m) => m.done))
+      || (jornada.swissRounds || []).some((r) => (r.matches || []).some((m) => m.done));
+    if (played) { alert("Ja hi ha partits jugats: no es pot desfer el torneig."); return; }
+    if (!window.confirm("Desfer el torneig? S'esborren els grups i els quadres i la jornada torna a inscripcions. Els inscrits i els pagaments es mantenen.")) return;
+    await updateDoc(doc(db, "jornadas", jornada.id), {
+      status: "inscripcio", format: null, groups: [], groupsR2: [], swissRounds: [], bracketGold: null, bracketSilver: null,
+    });
+  };
+
   const rescheduleGroups = async () => {
     const field = jornada.status === "grups_r2" ? "groupsR2" : "groups";
     const groups = JSON.parse(JSON.stringify(jornada[field] || []));
@@ -1199,6 +1210,9 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
           <button className="secondary small" onClick={() => window.confirm("Reajustar torns, taules i àrbitres dels partits pendents? Els resultats no es toquen.") && rescheduleGroups()}>
             🔄 Reajustar calendari ({TABLES_AVAILABLE} taules)
           </button>
+          {admin?.type === "master" && (
+            <button className="secondary small" style={{ marginLeft: 8 }} onClick={undoTournament}>↩️ Desfer torneig</button>
+          )}
         </p>
       )}
       {(jornada.status === "grups" || jornada.status === "grups_r1" || jornada.status === "grups_r2") && (
