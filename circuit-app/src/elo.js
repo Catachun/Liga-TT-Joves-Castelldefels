@@ -87,7 +87,42 @@ export function estimateMinutes(n, numGroups, bestOf, tables = 6) {
   return Math.ceil(matches / tables) * perMatch;
 }
 
-export function makeGroups(ids, ratings = {}, numGroupsOverride = null) {
+// Players of the same family (same email) must not share a group: swap the lower-rated one with the
+// closest-rated player of another group that does not create a new clash.
+function separateFamilies(groups, ratings, famOf) {
+  const fam = (id) => famOf[id] || null;
+  const rate = (id) => ratings[id] ?? ELO_START;
+  for (let iter = 0; iter < 100; iter++) {
+    let fixed = false;
+    for (let gi = 0; gi < groups.length && !fixed; gi++) {
+      const g = groups[gi];
+      const clash = g.find((a) => fam(a) && g.some((b) => b !== a && fam(b) === fam(a)));
+      if (!clash) continue;
+      const mates = g.filter((b) => fam(b) === fam(clash));
+      const mover = mates.sort((a, b) => rate(a) - rate(b))[0];
+      let best = null;
+      groups.forEach((h, hj) => {
+        if (hj === gi) return;
+        if (h.some((x) => fam(x) === fam(mover))) return;
+        h.forEach((c) => {
+          const rest = g.filter((x) => x !== mover);
+          if (fam(c) && rest.some((x) => fam(x) === fam(c))) return;
+          const diff = Math.abs(rate(c) - rate(mover));
+          if (!best || diff < best.diff) best = { hj, c, diff };
+        });
+      });
+      if (best) {
+        g[g.indexOf(mover)] = best.c;
+        groups[best.hj][groups[best.hj].indexOf(best.c)] = mover;
+        fixed = true;
+      }
+    }
+    if (!fixed) break;
+  }
+  return groups;
+}
+
+export function makeGroups(ids, ratings = {}, numGroupsOverride = null, famOf = {}) {
   const n = ids.length;
   const numGroups = Math.max(1, Math.min(numGroupsOverride || defaultNumGroups(n), Math.floor(n / 2) || 1));
   const sorted = shuffle(ids).sort((a, b) => (ratings[b] ?? ELO_START) - (ratings[a] ?? ELO_START));
@@ -99,7 +134,7 @@ export function makeGroups(ids, ratings = {}, numGroupsOverride = null) {
     if (g === numGroups) { g = numGroups - 1; dir = -1; }
     else if (g < 0) { g = 0; dir = 1; }
   });
-  return groups;
+  return separateFamilies(groups, ratings, famOf);
 }
 
 // Round robin scheduled by rounds (circle method): everybody plays once per round.

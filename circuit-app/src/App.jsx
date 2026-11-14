@@ -829,6 +829,7 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
   const rec = recommendTournament((jornada.participants || []).length);
   const [bestOfSel, setBestOfSel] = useState(null); // null = follow the recommendation
   const [groupsSel, setGroupsSel] = useState(null);
+  const [seedAdj, setSeedAdj] = useState({}); // manual level for the draw {playerId: number}
   const bestOfChosen = bestOfSel ?? rec.bestOf;
   const groupsChosen = groupsSel ?? rec.numGroups;
 
@@ -904,10 +905,12 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
     const jref = doc(db, "jornadas", jornada.id);
     const ids = participants.map((p) => p.playerId);
     const ratings = {};
-    ids.forEach((id) => (ratings[id] = playerById(id)?.elo || ELO_START));
+    ids.forEach((id) => (ratings[id] = seedAdj[id] ?? (playerById(id)?.elo || ELO_START)));
+    const famOf = {};
+    ids.forEach((id) => { const e = (playerById(id)?.familyEmail || "").trim().toLowerCase(); if (e) famOf[id] = e; });
 
     if (format === "grups" || format === "nivellats") {
-      const groups = makeGroups(ids, ratings, groupsChosen);
+      const groups = makeGroups(ids, ratings, groupsChosen, famOf);
       const groupsData = groups.map((g, i) => ({
         id: `g${i}`,
         players: g,
@@ -1194,6 +1197,19 @@ function JornadaDetail({ jornada, player, players, admin, onBack }) {
                   ))}
                 </select>
               </label>
+              <details className="seed-adjust">
+                <summary>Ajustar nivell per al sorteig (opcional)</summary>
+                <p className="hint small">Surt l'ELO actual. Canvia'l només per a qui estigui mal situat al rànquing (només afecta el sorteig, no l'ELO). Els del mateix email no aniran al mateix grup.</p>
+                {participants
+                  .map((p) => ({ id: p.playerId, name: playerById(p.playerId)?.name || "?", elo: Math.round(seedAdj[p.playerId] ?? (playerById(p.playerId)?.elo || ELO_START)) }))
+                  .sort((x, y) => y.elo - x.elo)
+                  .map((r) => (
+                    <label key={r.id} className="tourney-opt">
+                      {r.name}
+                      <input type="number" style={{ width: 80 }} value={r.elo} onChange={(e) => setSeedAdj({ ...seedAdj, [r.id]: Number(e.target.value) })} />
+                    </label>
+                  ))}
+              </details>
               <p className="hint">
                 Durada estimada (grups + quadres, {TABLES_AVAILABLE} taules): ~{Math.floor(estimateMinutes(participants.length, groupsChosen, bestOfChosen, TABLES_AVAILABLE) / 60)} h {estimateMinutes(participants.length, groupsChosen, bestOfChosen, TABLES_AVAILABLE) % 60} min
               </p>
