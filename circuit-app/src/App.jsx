@@ -1514,6 +1514,7 @@ function MatchRow({ match, p1, p2, referee, canEdit, canFix, mine, turn, table, 
       )}
       <span>{p2?.name}</span>
       {referee && !match.done && <small className="ref">⚖️ Àrbitre: {referee.name}</small>}
+      {!referee && turn && !match.done && <small className="ref" style={{ opacity: 0.7 }}>🤝 Sense àrbitre: arbitreu vosaltres</small>}
       {editing && (
         <ResultEditor names={[p1?.name, p2?.name]} bestOf={bestOf} confirmEntry={confirmEntry} onSave={onSave} />
       )}
