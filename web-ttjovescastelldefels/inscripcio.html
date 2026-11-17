@@ -28,7 +28,9 @@ legend{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.5px;co
 @media(max-width:620px){.row,.row3{grid-template-columns:1fr}h1{font-size:38px}}
 .f{margin-bottom:16px}
 label.l{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.2px}
-label.l .req{color:var(--yellow)}
+label.l .req,.ast{color:var(--yellow)}
+.notr .tr{display:none}
+#fs-tutor .tr{display:inline}
 input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{width:100%;background:var(--black);border:1px solid var(--line-strong);color:var(--white);padding:12px 13px;border-radius:5px;font:inherit;font-size:16px}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--purple-light);outline-offset:1px}
 .hint{font-size:12px;color:var(--muted2);margin-top:5px}
@@ -80,6 +82,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--purple-light);ou
 .small{font-size:12.5px;color:var(--muted2);margin-top:14px}
 footer{border-top:1px solid var(--line);padding:24px;text-align:center;font-size:12px;color:var(--muted)}
 </style>
+<script src="form-i18n.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -159,17 +162,17 @@ footer{border-top:1px solid var(--line);padding:24px;text-align:center;font-size
 
     <fieldset>
       <legend>6. Consentiments</legend>
-      <label class="chk"><input type="checkbox" id="c-tramits"><span><b>Tràmits federatius i assegurança.</b> Autoritzo el Club Tennis Taula Joves de Castelldefels a tramitar la llicència federativa (FCTT i RFETM) i l'assegurança esportiva de l'alumne/a, i a comunicar a la federació i a l'entitat asseguradora o mútua les dades i els documents facilitats (identificació, data de naixement, adreça i targeta sanitària CatSalut), només per a aquesta finalitat. Si l'alumne/a és menor d'edat, ho faig com a pare, mare o tutor/a legal. <span style="color:var(--yellow)">*</span></span></label>
+      <label class="chk"><input type="checkbox" id="c-tramits"><span><b>Tràmits federatius i assegurança.</b> Autoritzo el Club Tennis Taula Joves de Castelldefels a tramitar la llicència federativa (FCTT i RFETM) i l'assegurança esportiva de l'alumne/a, i a comunicar a la federació i a l'entitat asseguradora o mútua les dades i els documents facilitats (identificació, data de naixement, adreça i targeta sanitària CatSalut), només per a aquesta finalitat. Si l'alumne/a és menor d'edat, ho faig com a pare, mare o tutor/a legal. <span class="ast">*</span></span></label>
       <div class="f"><label class="l">Cessió de drets d'imatge <span class="req">*</span></label>
         <div class="hint" style="margin:0 0 6px">Autoritzo el club a fer i publicar fotografies i vídeos de l'alumne/a durant les activitats, competicions i esdeveniments, per a la web, les xarxes socials i els materials de difusió del club, incloses les publicacions amb el logotip dels patrocinadors. El club no hi publicarà el nom complet de menors ni usarà les imatges per identificar ningú com a persona amb una malaltia o discapacitat. Puc revocar aquesta autorització en qualsevol moment escrivint a ettcastelldefels@gmail.com; el club retirarà el contingut en un termini raonable. Si marco "No", el club evitarà que l'alumne/a aparegui en el material publicat.</div>
-        <div class="opt"><label><input type="radio" name="imatge" value="SI"> Sí, ho autoritzo</label><label><input type="radio" name="imatge" value="NO"> No</label></div>
+        <div class="opt"><label><input type="radio" name="imatge" value="SI"> <span>Sí, ho autoritzo</span></label><label><input type="radio" name="imatge" value="NO"> <span>No</span></label></div>
         <div class="err" id="e-imatge">Tria una opció</div></div>
       <div class="f"><label class="l">Comunicats del club (correu / WhatsApp) <span class="req">*</span></label>
         <div class="hint" style="margin:0 0 6px">Autoritzo el club a enviar-me comunicats sobre l'activitat (horaris, competicions, esdeveniments, quotes) per correu electrònic i WhatsApp. Puc donar-me de baixa en qualsevol moment. Si marco "No", només rebré els avisos imprescindibles del servei (canvis d'horari i cobraments).</div>
-        <div class="opt"><label><input type="radio" name="comunicats" value="SI"> Sí</label><label><input type="radio" name="comunicats" value="NO"> No</label></div>
+        <div class="opt"><label><input type="radio" name="comunicats" value="SI"> <span>Sí</span></label><label><input type="radio" name="comunicats" value="NO"> <span>No</span></label></div>
         <div class="err" id="e-comunicats">Tria una opció</div></div>
-      <label class="chk"><input type="checkbox" id="c-rgpd"><span>He llegit i accepto la <a href="privacitat.html" target="_blank" rel="noopener">política de privacitat</a>.<br><b>Responsable:</b> Club Tennis Taula Joves de Castelldefels (NIF G06884001), Institut Josep Lluís Sert, Castelldefels · ettcastelldefels@gmail.com.<br><b>Finalitats:</b> gestionar la inscripció i la participació de l'alumne/a, tramitar la llicència i l'assegurança esportiva, cobrar les quotes i comunicar-nos amb la família. Les fotografies dels documents només s'usen per formalitzar la llicència i l'assegurança.<br><b>Base legal:</b> la relació amb el club (inscripció), les obligacions legals i el consentiment donat en aquest formulari. Les dades de menors les facilita el pare, mare o tutor/a legal.<br><b>Destinataris:</b> la FCTT, la RFETM, l'asseguradora o mútua, l'entitat bancària (cobrament) i les administracions quan hi hagi obligació legal. Les dades es guarden en serveis de Google (Drive i Fulls de càlcul) contractats pel club, amb accés limitat a les persones de la junta i de l'administració que les necessiten.<br><b>Conservació:</b> mentre l'alumne/a participi en el club i, després, durant els terminis exigits per la llei.<br><b>Drets:</b> accés, rectificació, supressió, oposició, limitació i portabilitat, escrivint a ettcastelldefels@gmail.com. Si consideres que les teves dades no s'han tractat correctament, pots reclamar a l'Agència Espanyola de Protecció de Dades (www.aepd.es). <span style="color:var(--yellow)">*</span></span></label>
-      <label class="chk"><input type="checkbox" id="c-sepa"><span><b>Domiciliació bancària.</b> Com a titular del compte indicat, autoritzo el Club Tennis Taula Joves de Castelldefels a enviar instruccions a la meva entitat per carregar al compte la matrícula i les quotes mensuals del grup triat, i autoritzo l'entitat a fer els càrrecs. Tinc dret a ser reemborsat/da per l'entitat segons les condicions del meu contracte amb ella; el reemborsament s'ha de sol·licitar dins de les 8 setmanes següents al càrrec. Puc cancel·lar aquesta autorització avisant el club per escrit. <span style="color:var(--yellow)">*</span></span></label>
+      <label class="chk"><input type="checkbox" id="c-rgpd"><span>He llegit i accepto la <a href="privacitat.html" target="_blank" rel="noopener">política de privacitat</a>.<br><b>Responsable:</b> Club Tennis Taula Joves de Castelldefels (NIF G06884001), Institut Josep Lluís Sert, Castelldefels · ettcastelldefels@gmail.com.<br><b>Finalitats:</b> gestionar la inscripció i la participació de l'alumne/a, tramitar la llicència i l'assegurança esportiva, cobrar les quotes i comunicar-nos amb la família. Les fotografies dels documents només s'usen per formalitzar la llicència i l'assegurança.<br><b>Base legal:</b> la relació amb el club (inscripció), les obligacions legals i el consentiment donat en aquest formulari. Les dades de menors les facilita el pare, mare o tutor/a legal.<br><b>Destinataris:</b> la FCTT, la RFETM, l'asseguradora o mútua, l'entitat bancària (cobrament) i les administracions quan hi hagi obligació legal. Les dades es guarden en serveis de Google (Drive i Fulls de càlcul) contractats pel club, amb accés limitat a les persones de la junta i de l'administració que les necessiten.<br><b>Conservació:</b> mentre l'alumne/a participi en el club i, després, durant els terminis exigits per la llei.<br><b>Drets:</b> accés, rectificació, supressió, oposició, limitació i portabilitat, escrivint a ettcastelldefels@gmail.com. Si consideres que les teves dades no s'han tractat correctament, pots reclamar a l'Agència Espanyola de Protecció de Dades (www.aepd.es). <span class="ast">*</span></span></label>
+      <label class="chk"><input type="checkbox" id="c-sepa"><span><b>Domiciliació bancària.</b> Com a titular del compte indicat, autoritzo el Club Tennis Taula Joves de Castelldefels a enviar instruccions a la meva entitat per carregar al compte la matrícula i les quotes mensuals del grup triat, i autoritzo l'entitat a fer els càrrecs. Tinc dret a ser reemborsat/da per l'entitat segons les condicions del meu contracte amb ella; el reemborsament s'ha de sol·licitar dins de les 8 setmanes següents al càrrec. Puc cancel·lar aquesta autorització avisant el club per escrit. <span class="ast">*</span></span></label>
       <div class="f" id="f-sig"><label class="l">Signatura del pare/mare o tutor/a (o de l'alumne/a si és major d'edat) <span class="req">*</span></label>
         <div class="hint" style="margin:0 0 6px">Signant, confirmo que les dades facilitades són certes i que estic legitimat/da per fer aquesta inscripció.</div>
         <canvas id="sig" width="720" height="260"></canvas>
@@ -210,22 +213,26 @@ var sel = {group:null, days:[]};
 var $ = function(id){return document.getElementById(id)};
 
 // ====== RENDER GRUPS ======
-(function(){
-  var box = $('groups');
+function renderGroups(){
+  var box = $('groups'); box.innerHTML='';
   GROUPS.forEach(function(g){
     var lab = document.createElement('label'); lab.className='g'; lab.dataset.code=g.code;
     var days = g.days.map(function(d){
       var off = g.full && g.full.indexOf(d)>-1;
-      return '<label class="day'+(off?' off':'')+'"><input type="'+(g.pick==='all'?'checkbox':(g.pick===1?'radio':'checkbox'))+'" name="d-'+g.code+'" value="'+d+'"'+(off?' disabled':'')+(g.pick==='all'?' checked disabled':'')+'>'+d+(off?' (complet)':'')+'</label>';
+      return '<label class="day'+(off?' off':'')+'"><input type="'+(g.pick==='all'?'checkbox':(g.pick===1?'radio':'checkbox'))+'" name="d-'+g.code+'" value="'+d+'"'+(off?' disabled':'')+(g.pick==='all'?' checked disabled':'')+'>'+T(d)+(off?' '+T('(complet)'):'')+'</label>';
     }).join('');
-    var pickTxt = g.pick===1?'Tria 1 dia':g.pick===2?'Tria 2 dies':g.pick==='1-2'?'Tria 1 o 2 dies':'';
-    var price = 'Matrícula '+g.mat+' € · '+g.quota+' €/mes'+(g.quota2?' (1 dia) · '+g.quota2+' €/mes (2 dies)':'');
-    lab.innerHTML = '<input type="radio" name="grup" value="'+g.code+'"><span class="gt">'+g.name+'</span>'+
-      '<div class="gm">'+g.place+' · '+g.time+' · '+g.desc+'</div><div class="gp">'+price+'</div>'+
-      (g.note?'<div class="gm" style="color:var(--yellow)">'+g.note+'</div>':'')+
+    var pickTxt = g.pick===1?T('Tria 1 dia'):g.pick===2?T('Tria 2 dies'):g.pick==='1-2'?T('Tria 1 o 2 dies'):'';
+    var price = T('Matrícula {m} € · {q} €/mes',{m:g.mat,q:g.quota})+(g.quota2?' '+T('(1 dia) · {q} €/mes (2 dies)',{q:g.quota2}):'');
+    lab.innerHTML = '<input type="radio" name="grup" value="'+g.code+'"><span class="gt">'+T(g.name)+'</span>'+
+      '<div class="gm">'+g.place+' · '+g.time+' · '+T(g.desc)+'</div><div class="gp">'+price+'</div>'+
+      (g.note?'<div class="gm" style="color:var(--yellow)">'+T(g.note)+'</div>':'')+
       '<div class="days">'+days+'</div>'+(pickTxt?'<div class="dayhint" style="display:none">'+pickTxt+'</div>':'');
     box.appendChild(lab);
   });
+}
+renderGroups();
+(function(){
+  var box = $('groups');
   box.addEventListener('change', function(e){
     var lab = e.target.closest('.g'); if(!lab) return;
     var code = lab.dataset.code;
@@ -242,6 +249,17 @@ var $ = function(id){return document.getElementById(id)};
     updateSummary();
   });
 })();
+function reRenderGroups(){
+  var code = sel.group && sel.group.code, days = sel.days.slice();
+  renderGroups();
+  if(code){
+    var lab = document.querySelector('.g[data-code="'+code+'"]');
+    lab.classList.add('sel'); lab.querySelector('input[name="grup"]').checked = true;
+    var h = lab.querySelector('.dayhint'); if(h) h.style.display='block';
+    [].forEach.call(lab.querySelectorAll('.days input'), function(i){ if(days.indexOf(i.value)>-1) i.checked = true; });
+  }
+  updateSummary();
+}
 
 function feeInfo(){
   var g = sel.group; if(!g) return null;
@@ -262,7 +280,7 @@ function updateSummary(){
   if(!g){ s.style.display='none'; return; }
   var d = g.pick==='all'?g.days:sel.days; var f = feeInfo();
   s.style.display='block';
-  s.innerHTML = '<b>'+g.name+'</b> · '+(d.length?d.join(' i '):'tria els dies')+' · '+g.time+'<br>Matrícula '+f.mat+' € · quota mensual '+f.quota+' €. <span style="color:var(--muted2)">El club et confirma l\'import definitiu (descomptes per germans, etc.).</span>';
+  s.innerHTML = '<b>'+T(g.name)+'</b> · '+(d.length?d.map(T).join(' '+T('i')+' '):T('tria els dies'))+' · '+g.time+'<br>'+T('Matrícula {m} € · quota mensual {q} €.',{m:f.mat,q:f.quota})+' <span style="color:var(--muted2)">'+T("El club et confirma l'import definitiu (descomptes per germans, etc.).")+'</span>';
 }
 
 // ====== FOTOS ======
@@ -279,11 +297,11 @@ function renderPhotos(){
   PHOTOS.forEach(function(p){
     if(!p.show()) return;
     var d = document.createElement('div'); d.className='photo'; d.id='ph-'+p.id;
-    d.innerHTML = '<div class="pt">'+p.label+' <span style="color:var(--yellow)">*</span></div>'+
+    d.innerHTML = '<div class="pt">'+T(p.label)+' <span class="ast">*</span></div>'+
       '<label class="pbtn" for="in-'+p.id+'">📷 Fer foto / triar imatge</label>'+
       '<input type="file" id="in-'+p.id+'" accept="image/*">'+
-      '<div class="pprev" id="pv-'+p.id+'"><img alt=""><button type="button">Treure</button></div>'+
-      '<div class="err">Falta aquesta foto</div>';
+      '<div class="pprev" id="pv-'+p.id+'"><img alt=""><button type="button">'+T('Treure')+'</button></div>'+
+      '<div class="err">'+T('Falta aquesta foto')+'</div>';
     box.appendChild(d);
     var input = d.querySelector('input'), pv = d.querySelector('.pprev');
     if(photoData[p.id]){ pv.style.display='flex'; pv.querySelector('img').src = photoData[p.id].url; }
@@ -291,7 +309,7 @@ function renderPhotos(){
       var f = input.files[0]; if(!f) return;
       compress(f).then(function(r){
         photoData[p.id] = r; pv.style.display='flex'; pv.querySelector('img').src = r.url; d.classList.remove('bad');
-      }).catch(function(){ alert('No he pogut llegir aquesta imatge. Prova amb una altra foto.'); });
+      }).catch(function(){ alert(T('No he pogut llegir aquesta imatge. Prova amb una altra foto.')); });
     });
     pv.querySelector('button').addEventListener('click', function(){ delete photoData[p.id]; input.value=''; pv.style.display='none'; });
   });
@@ -319,8 +337,8 @@ function age(){ var v=$('naixement').value; if(!v) return null; var b=new Date(v
 function needTutor(){ var a=age(); return a===null || a<18; }
 function refreshTutor(){
   var need = needTutor() || $('nodni').checked;
-  document.querySelectorAll('#fs-tutor .tr').forEach(function(s){ s.style.display = need?'inline':'none'; });
-  $('tutor-hint').textContent = need ? 'Obligatori: l\'alumne/a és menor d\'edat o no té DNI.' : 'Opcional (l\'alumne/a és major d\'edat).';
+  $('fs-tutor').classList.toggle('notr', !need);
+  $('tutor-hint').textContent = need ? T("Obligatori: l'alumne/a és menor d'edat o no té DNI.") : T("Opcional (l'alumne/a és major d'edat).");
   renderPhotos();
 }
 $('naixement').addEventListener('change', refreshTutor);
@@ -438,9 +456,12 @@ $('form').addEventListener('submit', function(ev){
   send({token:CONFIG.TOKEN, id:submissionId, hp:$('hp').value, fields:fields, files:files});
 });
 
-function showMsg(kind, html){ var m=$('msg'); m.className='msg '+kind; m.innerHTML=html; }
+var lastMsg = null;
+function showMsg(kind, key, suffix){ lastMsg = {kind:kind, key:key, suffix:suffix||''}; var m=$('msg'); m.className='msg '+kind; m.innerHTML=T(key)+(suffix||''); }
+function setBtn(key){ var b=$('submit'); b.dataset.k=key; b.textContent=T(key); }
+window.onLang = function(){ if(lastMsg) showMsg(lastMsg.kind,lastMsg.key,lastMsg.suffix); setBtn($('submit').dataset.k||'Enviar preinscripció'); refreshTutor(); reRenderGroups(); };
 function send(payload){
-  var btn = $('submit'); btn.disabled = true; btn.textContent = 'Enviant… no tanquis la pàgina';
+  var btn = $('submit'); btn.disabled = true; setBtn('Enviant… no tanquis la pàgina');
   showMsg('ok','Enviant les dades i les fotos. Pot trigar uns segons…');
   var mock = /[?&]mock=1/.test(location.search);
   var p;
@@ -452,18 +473,19 @@ function send(payload){
   p.then(function(r){
     if(r && r.ok){
       $('form').querySelectorAll('input,select,button').forEach(function(x){ x.disabled = true; });
-      showMsg('ok','<b>Preinscripció enviada!</b> Hem rebut les teves dades. El club et confirmarà la plaça per correu en uns dies. Referència: <b>'+(r.ref||'')+'</b>');
-      btn.textContent = 'Enviada'; window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
+      showMsg('ok',"<b>Preinscripció enviada!</b> Hem rebut les teves dades. El club et confirmarà la plaça per correu en uns dies. Referència:",' <b>'+(r.ref||'')+'</b>');
+      setBtn('Enviada'); window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
     } else { fail(); }
   }).catch(fail);
   function fail(){
-    btn.disabled=false; btn.textContent='Enviar preinscripció';
-    showMsg('ko','No s\'ha pogut enviar. Comprova la connexió i torna-ho a provar. Si segueix fallant, escriu-nos a <a href="mailto:ettcastelldefels@gmail.com">ettcastelldefels@gmail.com</a>. Les dades no s\'han perdut: no tanquis aquesta pàgina.');
+    btn.disabled=false; setBtn('Enviar preinscripció');
+    showMsg('ko',"No s'ha pogut enviar. Comprova la connexió i torna-ho a provar. Si segueix fallant, escriu-nos a <a href=\"mailto:ettcastelldefels@gmail.com\">ettcastelldefels@gmail.com</a>. Les dades no s'han perdut: no tanquis aquesta pàgina.");
   }
 }
 
 if(CONFIG.SCRIPT_URL==='PENDENT' && !/[?&]mock=1/.test(location.search)) $('pend').style.display='block';
 refreshTutor();
+applyLang();
 </script>
 </body>
 </html>

@@ -28,7 +28,9 @@ legend{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:.5px;co
 @media(max-width:620px){.row,.row3{grid-template-columns:1fr}h1{font-size:38px}}
 .f{margin-bottom:16px}
 label.l{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.2px}
-label.l .req{color:var(--yellow)}
+label.l .req,.ast{color:var(--yellow)}
+.notr .tr{display:none}
+#fs-tutor .tr{display:inline}
 input[type=text],input[type=email],input[type=tel],input[type=date],select,textarea{width:100%;background:var(--black);border:1px solid var(--line-strong);color:var(--white);padding:12px 13px;border-radius:5px;font:inherit;font-size:16px}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--purple-light);outline-offset:1px}
 .hint{font-size:12px;color:var(--muted2);margin-top:5px}
@@ -80,6 +82,7 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--purple-light);ou
 .small{font-size:12.5px;color:var(--muted2);margin-top:14px}
 footer{border-top:1px solid var(--line);padding:24px;text-align:center;font-size:12px;color:var(--muted)}
 </style>
+<script src="form-i18n.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -124,12 +127,12 @@ footer{border-top:1px solid var(--line);padding:24px;text-align:center;font-size
 
     <fieldset>
       <legend>4. Consentiments</legend>
-      <label class="chk"><input type="checkbox" id="c-tramits"><span><b>Tràmit de llicència i assegurança.</b> Autoritzo el Club Tennis Taula Joves de Castelldefels a tramitar la llicència federativa de l'aspirant davant la Federació Catalana de Tennis Taula (FCTT) i l'assegurança esportiva associada, i a comunicar a la federació i a l'entitat asseguradora les dades i els documents facilitats (identificació, data de naixement, adreça i targeta sanitària CatSalut), només per a aquesta finalitat. Si l'aspirant és menor d'edat, ho faig com a pare, mare o tutor/a legal. <span style="color:var(--yellow)">*</span></span></label>
+      <label class="chk"><input type="checkbox" id="c-tramits"><span><b>Tràmit de llicència i assegurança.</b> Autoritzo el Club Tennis Taula Joves de Castelldefels a tramitar la llicència federativa de l'aspirant davant la Federació Catalana de Tennis Taula (FCTT) i l'assegurança esportiva associada, i a comunicar a la federació i a l'entitat asseguradora les dades i els documents facilitats (identificació, data de naixement, adreça i targeta sanitària CatSalut), només per a aquesta finalitat. Si l'aspirant és menor d'edat, ho faig com a pare, mare o tutor/a legal. <span class="ast">*</span></span></label>
       <div class="f"><label class="l">Ús de la imatge a l'app i al TT Circuit <span class="req">*</span></label>
         <div class="hint" style="margin:0 0 6px">Autoritzo l'ús de la fotografia tipus carnet i de la imatge de l'aspirant a l'app i al TT Circuit, per identificar-lo al rànquing i durant les jornades, i en els materials de l'app i del circuit. No s'usaran per identificar ningú com a persona amb una malaltia o discapacitat. Puc revocar aquesta autorització en qualsevol moment escrivint a ettcastelldefels@gmail.com. Si marco "No", el club evitarà que l'aspirant aparegui en aquests materials.</div>
-        <div class="opt"><label><input type="radio" name="imatge" value="SI"> Sí, ho autoritzo</label><label><input type="radio" name="imatge" value="NO"> No</label></div>
+        <div class="opt"><label><input type="radio" name="imatge" value="SI"> <span>Sí, ho autoritzo</span></label><label><input type="radio" name="imatge" value="NO"> <span>No</span></label></div>
         <div class="err" id="e-imatge">Tria una opció</div></div>
-      <label class="chk"><input type="checkbox" id="c-rgpd"><span>He llegit i accepto la <a href="privacitat.html" target="_blank" rel="noopener">política de privacitat</a>.<br><b>Responsable:</b> Club Tennis Taula Joves de Castelldefels (NIF G06884001), Institut Josep Lluís Sert, Castelldefels · ettcastelldefels@gmail.com.<br><b>Finalitats:</b> tramitar la llicència federativa i l'assegurança esportiva de l'aspirant i comunicar-nos amb ell o la seva família. Les fotografies dels documents només s'usen per formalitzar la llicència i l'assegurança.<br><b>Base legal:</b> la sol·licitud que fas al club, les obligacions legals i el consentiment donat en aquest formulari. Les dades de menors les facilita el pare, mare o tutor/a legal.<br><b>Destinataris:</b> la FCTT, l'entitat asseguradora i les administracions quan hi hagi obligació legal. Les dades es guarden en serveis de Google (Drive i Fulls de càlcul) contractats pel club, amb accés limitat a les persones de la junta i de l'administració que les necessiten.<br><b>Conservació:</b> mentre l'aspirant participi en el club i, després, durant els terminis exigits per la llei.<br><b>Drets:</b> accés, rectificació, supressió, oposició, limitació i portabilitat, escrivint a ettcastelldefels@gmail.com. Si consideres que les teves dades no s'han tractat correctament, pots reclamar a l'Agència Espanyola de Protecció de Dades (www.aepd.es). <span style="color:var(--yellow)">*</span></span></label>
+      <label class="chk"><input type="checkbox" id="c-rgpd"><span>He llegit i accepto la <a href="privacitat.html" target="_blank" rel="noopener">política de privacitat</a>.<br><b>Responsable:</b> Club Tennis Taula Joves de Castelldefels (NIF G06884001), Institut Josep Lluís Sert, Castelldefels · ettcastelldefels@gmail.com.<br><b>Finalitats:</b> tramitar la llicència federativa i l'assegurança esportiva de l'aspirant i comunicar-nos amb ell o la seva família. Les fotografies dels documents només s'usen per formalitzar la llicència i l'assegurança.<br><b>Base legal:</b> la sol·licitud que fas al club, les obligacions legals i el consentiment donat en aquest formulari. Les dades de menors les facilita el pare, mare o tutor/a legal.<br><b>Destinataris:</b> la FCTT, l'entitat asseguradora i les administracions quan hi hagi obligació legal. Les dades es guarden en serveis de Google (Drive i Fulls de càlcul) contractats pel club, amb accés limitat a les persones de la junta i de l'administració que les necessiten.<br><b>Conservació:</b> mentre l'aspirant participi en el club i, després, durant els terminis exigits per la llei.<br><b>Drets:</b> accés, rectificació, supressió, oposició, limitació i portabilitat, escrivint a ettcastelldefels@gmail.com. Si consideres que les teves dades no s'han tractat correctament, pots reclamar a l'Agència Espanyola de Protecció de Dades (www.aepd.es). <span class="ast">*</span></span></label>
       <div class="err" id="e-chk">Cal acceptar els consentiments obligatoris (*).</div>
     </fieldset>
 
@@ -161,18 +164,18 @@ function renderPhotos(){
   PHOTOS.forEach(function(p){
     if(!p.show()) return;
     var d = document.createElement('div'); d.className='photo'; d.id='ph-'+p.id;
-    d.innerHTML = '<div class="pt">'+p.label+' <span style="color:var(--yellow)">*</span></div>'+
+    d.innerHTML = '<div class="pt">'+T(p.label)+' <span class="ast">*</span></div>'+
       '<label class="pbtn" for="in-'+p.id+'">📷 Fer foto / triar imatge</label>'+
       '<input type="file" id="in-'+p.id+'" accept="image/*">'+
-      '<div class="pprev" id="pv-'+p.id+'"><img alt=""><button type="button">Treure</button></div>'+
-      '<div class="err">Falta aquesta foto</div>';
+      '<div class="pprev" id="pv-'+p.id+'"><img alt=""><button type="button">'+T('Treure')+'</button></div>'+
+      '<div class="err">'+T('Falta aquesta foto')+'</div>';
     box.appendChild(d);
     var input = d.querySelector('input'), pv = d.querySelector('.pprev');
     if(photoData[p.id]){ pv.style.display='flex'; pv.querySelector('img').src = photoData[p.id].url; }
     input.addEventListener('change', function(){
       var f = input.files[0]; if(!f) return;
       compress(f).then(function(r){ photoData[p.id] = r; pv.style.display='flex'; pv.querySelector('img').src = r.url; d.classList.remove('bad'); })
-        .catch(function(){ alert('No he pogut llegir aquesta imatge. Prova amb una altra foto.'); });
+        .catch(function(){ alert(T('No he pogut llegir aquesta imatge. Prova amb una altra foto.')); });
     });
     pv.querySelector('button').addEventListener('click', function(){ delete photoData[p.id]; input.value=''; pv.style.display='none'; });
   });
@@ -246,9 +249,12 @@ $('form').addEventListener('submit', function(ev){
   PHOTOS.forEach(function(p){ if(photoData[p.id] && p.show()) files.push({name:p.id+'_'+tag+'.jpg', mime:'image/jpeg', data:photoData[p.id].data}); });
   send({token:CONFIG.TOKEN, tipus:'federacio', id:submissionId, hp:$('hp').value, fields:fields, files:files});
 });
-function showMsg(kind, html){ var m=$('msg'); m.className='msg '+kind; m.innerHTML=html; }
+var lastMsg = null;
+function showMsg(kind, key, suffix){ lastMsg = {kind:kind, key:key, suffix:suffix||''}; var m=$('msg'); m.className='msg '+kind; m.innerHTML=T(key)+(suffix||''); }
+function setBtn(key){ var b=$('submit'); b.dataset.k=key; b.textContent=T(key); }
+window.onLang = function(){ if(lastMsg) showMsg(lastMsg.kind,lastMsg.key,lastMsg.suffix); setBtn($('submit').dataset.k||'Enviar sol·licitud'); renderPhotos(); };
 function send(payload){
-  var btn = $('submit'); btn.disabled = true; btn.textContent = 'Enviant… no tanquis la pàgina';
+  var btn = $('submit'); btn.disabled = true; setBtn('Enviant… no tanquis la pàgina');
   showMsg('ok','Enviant les dades i les fotos. Pot trigar uns segons…');
   var p = /[?&]mock=1/.test(location.search)
     ? new Promise(function(r){ setTimeout(function(){ window.__lastPayload = payload; r({ok:true, ref:payload.id}); }, 500); })
@@ -256,16 +262,17 @@ function send(payload){
   p.then(function(r){
     if(r && r.ok){
       $('form').querySelectorAll('input,select,button').forEach(function(x){ x.disabled = true; });
-      showMsg('ok','<b>Sol·licitud enviada!</b> El club tramitarà la teva llicència i t\'avisarà per correu. Referència: <b>'+(r.ref||'')+'</b>');
-      btn.textContent = 'Enviada'; window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
+      showMsg('ok',"<b>Sol·licitud enviada!</b> El club tramitarà la teva llicència i t'avisarà per correu. Referència:",' <b>'+(r.ref||'')+'</b>');
+      setBtn('Enviada'); window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'});
     } else { fail(); }
   }).catch(fail);
   function fail(){
-    btn.disabled=false; btn.textContent='Enviar sol·licitud';
-    showMsg('ko','No s\'ha pogut enviar. Comprova la connexió i torna-ho a provar. Si segueix fallant, escriu-nos a <a href="mailto:ettcastelldefels@gmail.com">ettcastelldefels@gmail.com</a>. Les dades no s\'han perdut: no tanquis aquesta pàgina.');
+    btn.disabled=false; setBtn('Enviar sol·licitud');
+    showMsg('ko',"No s'ha pogut enviar. Comprova la connexió i torna-ho a provar. Si segueix fallant, escriu-nos a <a href=\"mailto:ettcastelldefels@gmail.com\">ettcastelldefels@gmail.com</a>. Les dades no s'han perdut: no tanquis aquesta pàgina.");
   }
 }
 refresh();
+applyLang();
 </script>
 </body>
 </html>
