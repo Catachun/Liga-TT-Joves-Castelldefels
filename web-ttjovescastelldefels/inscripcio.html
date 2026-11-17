@@ -122,7 +122,7 @@ footer{border-top:1px solid var(--line);padding:24px;text-align:center;font-size
         <div class="f"><label class="l">Província</label><input type="text" id="provincia" value="Barcelona"></div>
       </div>
       <div class="row">
-        <div class="f"><label class="l">Telèfon de l'alumne/a</label><input type="tel" id="tel" autocomplete="tel"></div>
+        <div class="f"><label class="l">Telèfon de l'alumne/a</label><input type="tel" id="tel" autocomplete="tel"><div class="err">Indica un telèfon o un correu de contacte</div></div>
         <div class="f"><label class="l">Correu de l'alumne/a</label><input type="email" id="email"></div>
       </div>
     </fieldset>
@@ -356,8 +356,15 @@ $('sigclear').addEventListener('click', function(){ sctx.clearRect(0,0,sig.width
 
 // ====== AJUDES ======
 $('iban').addEventListener('input', function(){ var v=this.value.replace(/\s+/g,'').toUpperCase(); this.value = v.replace(/(.{4})/g,'$1 ').trim(); });
-$('titularDni').addEventListener('focus', function(){ if(!this.value){ var t = needTutor()||$('nodni').checked; this.value = t ? $('tutorDni').value : $('dni').value; var el=this; setTimeout(function(){ el.select(); },0); } });
-$('titular').addEventListener('focus', function(){ if(!this.value){ var t = needTutor()||$('nodni').checked; this.value = t ? $('tutorNom').value : ($('nom').value+' '+$('cognom1').value+' '+$('cognom2').value).replace(/\s+/g,' ').trim(); var el=this; setTimeout(function(){ el.select(); },0); } });
+var dirty = {titular:false, titularDni:false};
+$('titular').addEventListener('input', function(){ dirty.titular = true; });
+$('titularDni').addEventListener('input', function(){ dirty.titularDni = true; });
+function syncTitular(){
+  var t = needTutor() || $('nodni').checked;
+  if(!dirty.titular) $('titular').value = t ? $('tutorNom').value : ($('nom').value+' '+$('cognom1').value+' '+$('cognom2').value).replace(/\s+/g,' ').trim();
+  if(!dirty.titularDni) $('titularDni').value = t ? $('tutorDni').value : $('dni').value;
+}
+['nom','cognom1','cognom2','dni','tutorNom','tutorDni','naixement','nodni'].forEach(function(id){ ['input','change'].forEach(function(ev){ $(id).addEventListener(ev, syncTitular); }); });
 
 // ====== ENVIAMENT ======
 var MONTHS = ['gen','febr','març','abr','maig','juny','jul','ago','sept','oct','nov','des'];
@@ -386,7 +393,7 @@ $('form').addEventListener('submit', function(ev){
     mark('tutorEmail', chk(validEmail($('tutorEmail').value),'tutorEmail'));
   } else if($('tutorEmail').value) { mark('tutorEmail', chk(validEmail($('tutorEmail').value),'tutorEmail')); }
   if(!$('tel').value.trim() && !(tut && $('tutorTel').value.trim()) && !(!tut && false)){ /* telèfon: n'hi ha prou amb un */ }
-  if(!tut) { /* adult: cal telèfon o correu propi */ chk(!!($('tel').value.trim()||$('email').value.trim()),'tel'); }
+  if(!tut) { /* adult: cal telèfon o correu propi */ mark('tel', chk(!!($('tel').value.trim()||$('email').value.trim()),'tel')); }
   if($('email').value) mark('email', chk(validEmail($('email').value),'email'));
   mark('titular', chk(!!$('titular').value.trim(),'titular'));
   mark('titularDni', chk(validDni($('titularDni').value),'titularDni'));
